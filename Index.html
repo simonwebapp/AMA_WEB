@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alle mot Alle - Gull-versjon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Laster inn programfonten fra samme mappe */
+        @font-face {
+            font-family: 'Avenir';
+            src: url('avenir.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        :root {
+            --gold-grad: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
+            --dark-blue-base: #050a18;
+        }
+
+        body {
+            background-color: #000;
+            color: #fcf6ba;
+            font-family: 'Avenir', sans-serif;
+            overflow: hidden;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Omdirigerer de gamle font-klassene til å bruke Avenir */
+        .oswald { font-family: 'Avenir', sans-serif !important; }
+        .font-inter { font-family: 'Avenir', sans-serif !important; }
+
+        /* 16:9 Hovedvindu */
+        #app-viewport {
+            position: relative;
+            width: 100vw;
+            height: 56.25vw;
+            max-height: 100vh;
+            max-width: 177.78vh;
+            background: radial-gradient(circle at center, #0a1631 0%, var(--dark-blue-base) 100%);
+            background-size: 200% 200%;
+            animation: bgMove 25s ease infinite;
+            overflow: hidden;
+            box-shadow: 0 0 100px rgba(0,0,0,1);
+        }
+
+        @keyframes bgMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        #particles-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .gold-text {
+            background: var(--gold-grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+            text-transform: uppercase;
+            caret-color: #fcf6ba;
+        }
+
+        .gold-border {
+            border-image: var(--gold-grad) 1;
+            border-style: solid;
+        }
+
+        /* Oppsett-meny */
+        #setup-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding-top: 2.5vw;
+            transition: opacity 0.5s ease;
+        }
+
+        #setup-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.8vw;
+            width: 86%;
+            margin-bottom: 2vw;
+        }
+
+        /* Filmrullen */
+        #film-roll {
+            display: none; 
+            opacity: 0;
+            height: 100%;
+            width: 800%;
+            transition: transform 1s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.5s ease;
+            will-change: transform;
+            z-index: 2;
+        }
+
+        .frame {
+            flex: 0 0 12.5%;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        #grid-frame {
+            position: relative;
+        }
+
+        .big-text {
+            font-size: 8.5vw;
+            line-height: 1.1;
+            letter-spacing: -0.01em;
+            text-align: center;
+            white-space: pre-wrap;
+            width: 90%;
+            outline: none;
+        }
+
+        /* Spillets Grid */
+        #grid-view-inner {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2vw;
+            width: 88%;
+            position: static;
+        }
+
+        .card-wrapper {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            position: static;
+        }
+
+        /* FADE KORT STRUKTUR */
+        .category-card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            z-index: 10;
+            box-sizing: border-box;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
+                        transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                        top 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
+                        left 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                        width 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
+                        height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        /* Begge sider av kortet ligger oppå hverandre. Stroke (border) bruker nå vw for stabil tykkelse uansett skjerm. */
+        .card-front, .card-back {
+            position: absolute;
+            inset: 0;
+            background-color: transparent;
+            border: 0.3vw solid; 
+            border-image: var(--gold-grad) 1;
+            display: flex;
+            box-sizing: border-box;
+            transition: border-width 0.6s ease, opacity 0.5s ease;
+            width: 100%;
+            height: 100%;
+        }
+
+        .card-front {
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            z-index: 2;
+        }
+
+        .card-back {
+            display: block; 
+            opacity: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Når kortet aktiverer "spørsmåls-modus" (Kryssfade) */
+        .category-card.flipped .card-front {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .category-card.flipped .card-back {
+            opacity: 1;
+            z-index: 3;
+            pointer-events: auto;
+        }
+
+        /* Tittel på forsiden */
+        .card-label {
+            font-size: 2.6vw;
+            line-height: 1.1;
+            text-align: center;
+            white-space: pre-wrap;
+            display: block;
+            width: 90%;
+            outline: none;
+            transition: font-size 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity 0.4s ease;
+        }
+
+        .card-label.editable {
+            cursor: text;
+        }
+
+        /* Fritekst-felt på baksiden */
+        .back-content {
+            background: transparent;
+            border: none;
+            color: #fcf6ba;
+            font-family: 'Avenir', sans-serif;
+            font-size: 1.0vw;
+            line-height: 1.35;
+            padding: 2vw; /* Standard luft fra kantene */
+            padding-right: 3.5vw; /* Litt ekstra plass til scroll og snu-knapp */
+            width: 100%;
+            height: 100%;
+            outline: none;
+            resize: none;
+            white-space: pre-wrap;
+            text-align: left;
+            transition: font-size 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
+                        padding 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Ekspandert */
+        .category-card.expanded {
+            z-index: 100 !important;
+            box-shadow: 0 0 150px rgba(0,0,0,1);
+        }
+
+        .category-card.expanded .card-front,
+        .category-card.expanded .card-back {
+            border-width: 0.8vw;
+        }
+
+        /* Skalerer tekst og padding når kortet er stort */
+        .category-card.expanded .card-label { font-size: 9.2vw; }
+        .category-card.expanded .back-content { 
+            font-size: 4.0vw; 
+            padding: 5vw;
+            padding-right: 8vw;
+        }
+
+        .category-card.is-closing {
+            z-index: 100 !important;
+        }
+
+        .grid-dimmed .card-wrapper .category-card:not(.expanded):not(.is-closing) {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+        }
+
+        .category-card.used {
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .category-card.used .card-front,
+        .category-card.used .card-back {
+            border-image: none;
+            border-color: #bf953f;
+        }
+        
+        /* Skjul alt innhold skikkelig på brukte kort */
+        .category-card.used .card-label,
+        .category-card.used .back-content { 
+            opacity: 0 !important; 
+            visibility: hidden !important;
+        }
+
+        /* Snu-Emblem (Pill knapp) */
+        .flip-emblem {
+            position: absolute;
+            top: 0.8vw;
+            right: 0.8vw;
+            height: 2.2vw;
+            padding: 0 1vw;
+            background: rgba(191, 149, 63, 0.15);
+            border: 1px solid rgba(191, 149, 63, 0.5);
+            border-radius: 1.1vw; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.4vw;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 20;
+        }
+        .flip-emblem:hover {
+            background: rgba(191, 149, 63, 0.6);
+            transform: scale(1.05);
+        }
+        .flip-emblem svg {
+            width: 1.2vw;
+            height: 1.2vw;
+            stroke: #fcf6ba;
+        }
+        .flip-emblem span {
+            font-family: 'Avenir', sans-serif;
+            font-size: 0.75vw;
+            font-weight: 700;
+            color: #fcf6ba;
+            letter-spacing: 0.05em;
+            margin-top: 0.1vw;
+        }
+
+        /* Pen scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(191, 149, 63, 0.5); 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(191, 149, 63, 0.8); 
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Lydspiller for Pling (henter .wav direkte fra din egen server/mappe) -->
+    <audio id="pling-audio" src="pling.wav" preload="auto"></audio>
+
+    <div id="app-viewport">
+        <canvas id="particles-canvas"></canvas>
+        
+        <!-- Setup Skjerm -->
+        <div id="setup-overlay">
+            <h2 class="oswald text-[2.8vw] gold-text mb-[1.5vw]">OPPSETT AV SKJERMER</h2>
+            <div id="setup-grid">
+                <!-- Genereres dynamisk -->
+            </div>
+            
+            <!-- Kontrollpanel Footer (Låst til bunn) -->
+            <div class="absolute bottom-0 left-0 w-full px-[3vw] pb-[2vw] flex justify-between items-end pointer-events-none">
+                
+                <!-- Venstre: Instruksjoner for navigasjon (Horisontal) -->
+                <div class="text-left text-white/80 font-inter text-[0.85vw] leading-[1.5] pointer-events-auto bg-black/60 p-[1vw] px-[1.5vw] rounded-xl border border-yellow-600/30 backdrop-blur-sm max-w-[65%]">
+                    <h3 class="oswald text-[1.1vw] text-[#fcf6ba] mb-[0.5vw] tracking-wider">HVORDAN NAVIGERE:</h3>
+                    <ul class="grid grid-cols-2 gap-x-[3vw] gap-y-[0.3vw] list-disc ml-[1.5vw] opacity-90">
+                        <li><span class="text-[#bf953f] font-bold">Piltast Høyre/Venstre:</span> Bla frem og tilbake i introen</li>
+                        <li><span class="text-[#bf953f] font-bold">ESC / Backspace:</span> Lukk kort uten å markere det som brukt</li>
+                        <li><span class="text-[#bf953f] font-bold">Tall 1-6:</span> Åpne og lukk korresponderende kategori</li>
+                        <li><span class="text-[#bf953f] font-bold">Shift + 1-6:</span> Hent tilbake et kort som er markert som brukt</li>
+                        <li><span class="text-[#bf953f] font-bold">Mellomrom (SPACE):</span> Vise/skjule kategorispm (Fade)</li>
+                        <li><span class="text-[#bf953f] font-bold">R:</span> Nullstill alle brukte kort på hele brettet</li>
+                    </ul>
+                </div>
+
+                <!-- Høyre: Lagre og Kjør -->
+                <div class="flex flex-col items-end gap-[1vw] pointer-events-auto">
+                    <label class="flex items-center gap-[0.5vw] cursor-pointer hover:opacity-80 transition-opacity bg-black/60 p-[0.8vw] px-[1.2vw] rounded-xl border border-yellow-600/30 backdrop-blur-sm">
+                        <input type="checkbox" id="auto-flip-checkbox" class="w-[1.2vw] h-[1.2vw] accent-yellow-500 cursor-pointer" checked>
+                        <span class="font-inter text-[#fcf6ba] text-[1vw]">Auto-vis tekst når kategori åpnes</span>
+                    </label>
+
+                    <button onclick="startApp()" class="oswald px-[3vw] py-[1vw] bg-yellow-500 text-black font-black text-[1.5vw] rounded-xl hover:scale-105 transition-transform shadow-[0_0_20px_rgba(250,204,21,0.4)]">LAGRE OG KJØR</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hovedspillet -->
+        <div id="film-roll">
+            <!-- Slide 1: Logo -->
+            <div class="frame">
+                <!-- JUSTER LOGOSTØRRELSE HER: Endre "width" og "height" verdiene under (vw = prosent av skjermbredden) -->
+                <div style="width: 48vw; height: 31.375vw;" class="flex items-center justify-center relative">
+                     <!-- Laster logo direkte fra samme mappe -->
+                     <img id="main-logo-img" src="logo.png" alt="Logo" style="max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 0 20px rgba(191,149,63,0.3));" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
+                     
+                     <span id="logo-fallback" class="oswald text-4xl gold-text text-center" style="display: none; border: 0.3vw dashed #bf953f; padding: 3vw; border-radius: 24px;">
+                        MANGLER BILDE<br><span id="logo-fallback-text" class="text-[1.5vw] text-white/50">Sjekk at bildet heter 'logo.png' i GitHub-mappen din!</span>
+                     </span>
+                </div>
+            </div>
+            
+            <!-- Slides 2-7 -->
+            <div id="individual-slides" class="flex h-full" style="width: 75%;"></div>
+            
+            <!-- Slide 8: Grid -->
+            <div class="frame" id="grid-frame">
+                <div id="grid-view-inner">
+                    <div id="grid-container"></div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <script>
+        // --- STANDARD INNHOLD (Hardkodet grunnfjell) ---
+        // Du kan skrive standardtekstene her. Oppsett-skjermen vil lese dette 
+        // første gang, og deretter huske dine endringer via LocalStorage.
+        let categories = [
+            { id: 1, text: "KATEGORI 1", qText: "Spørsmål 1...\n\nSpørsmål 2...\n\nSpørsmål 3..." },
+            { id: 2, text: "KATEGORI 2", qText: "Spørsmål tekst her..." },
+            { id: 3, text: "KATEGORI 3", qText: "Spørsmål tekst her..." },
+            { id: 4, text: "KATEGORI 4", qText: "Spørsmål tekst her..." },
+            { id: 5, text: "KATEGORI 5", qText: "Spørsmål tekst her..." },
+            { id: 6, text: "KATEGORI 6", qText: "Spørsmål tekst her..." }
+        ];
+
+        let currentSlide = 0; 
+        let expandedId = null;
+        let usedCategories = new Set();
+        let autoFlipEnabled = true;
+
+        const STORAGE_KEY = 'alleMotAlleData_v3';
+
+        const setupOverlay = document.getElementById('setup-overlay');
+        const setupGrid = document.getElementById('setup-grid');
+        const roll = document.getElementById('film-roll');
+        const gridContainer = document.getElementById('grid-container');
+        const individualSlides = document.getElementById('individual-slides');
+        const frame = document.getElementById('grid-frame');
+
+        const flipIconSVG = '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8m0 0V3m0 5h5"></path></svg>';
+
+        // Spiller av lydfilen via Audio API
+        function playPling() {
+            const audio = document.getElementById('pling-audio');
+            if (audio) {
+                audio.currentTime = 0;
+                audio.play().catch(e => console.log('Krever klikk på skjermen for å spille lyd (nettleser-sikkerhet).', e));
+            }
+        }
+
+        function createFlipEmblem(onClick, btnText) {
+            const btn = document.createElement('div');
+            btn.className = 'flip-emblem';
+            btn.innerHTML = `${flipIconSVG} <span>${btnText}</span>`;
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                onClick();
+            };
+            return btn;
+        }
+
+        // --- OPPSETT (SETUP GRID) ---
+        function initSetup() {
+            // 1. Last inn lagrede data før vi bygger oppsettet
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (parsed.categories) categories = parsed.categories;
+                    if (parsed.autoFlip !== undefined) autoFlipEnabled = parsed.autoFlip;
+                } catch (e) {
+                    console.error("Kunne ikke laste lagrede data", e);
+                }
+            }
+
+            document.getElementById('auto-flip-checkbox').checked = autoFlipEnabled;
+            setupGrid.innerHTML = '';
+            
+            categories.forEach(cat => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'card-wrapper';
+
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                
+                const inner = document.createElement('div');
+                inner.className = 'card-inner';
+
+                // Setup Front (Kategori-navn)
+                const front = document.createElement('div');
+                front.className = 'card-front';
+                
+                const label = document.createElement('span');
+                label.className = 'card-label gold-text editable oswald font-bold';
+                label.contentEditable = "true";
+                label.spellcheck = false;
+                label.innerText = cat.text;
+                label.id = `setup-input-${cat.id}`;
+                
+                label.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    const text = (e.originalEvent || e).clipboardData.getData('text/plain');
+                    document.execCommand('insertText', false, text.toUpperCase());
+                });
+
+                front.appendChild(label);
+                front.appendChild(createFlipEmblem(() => card.classList.toggle('flipped'), 'VISE SPM'));
+
+                // Setup Back (Fritekst-spørsmål)
+                const back = document.createElement('div');
+                back.className = 'card-back';
+                
+                back.appendChild(createFlipEmblem(() => card.classList.toggle('flipped'), 'KATEGORI'));
+
+                const qArea = document.createElement('textarea');
+                qArea.className = 'back-content custom-scrollbar';
+                qArea.placeholder = "Fyll inn kategorispørsmål her...\n\nIngen overskrift, ingen bokser.\nBruk store og små bokstaver som du vil.";
+                qArea.value = cat.qText || ""; 
+                qArea.id = `setup-q-${cat.id}`;
+                back.appendChild(qArea);
+
+                inner.appendChild(front);
+                inner.appendChild(back);
+                card.appendChild(inner);
+                wrapper.appendChild(card);
+                setupGrid.appendChild(wrapper);
+            });
+
+            initParticles();
+        }
+
+        // --- LAGRE OG START ---
+        function startApp() {
+            autoFlipEnabled = document.getElementById('auto-flip-checkbox').checked;
+
+            categories = categories.map(cat => {
+                const el = document.getElementById(`setup-input-${cat.id}`);
+                const qText = document.getElementById(`setup-q-${cat.id}`).value;
+                return {
+                    id: cat.id,
+                    text: el.innerText.trim().toUpperCase() || `KATEGORI ${cat.id}`,
+                    qText: qText
+                };
+            });
+
+            // LAGRING: Lagre alt til nettleseren (localStorage)
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                categories: categories,
+                autoFlip: autoFlipEnabled
+            }));
+
+            buildGame();
+
+            setupOverlay.style.opacity = '0';
+            setTimeout(() => {
+                setupOverlay.style.display = 'none';
+                roll.style.display = 'flex';
+                roll.offsetHeight; 
+                roll.style.opacity = '1';
+            }, 500);
+        }
+
+        // --- HOVEDSPILL (GAME GRID) ---
+        function buildGame() {
+            individualSlides.innerHTML = '';
+            gridContainer.innerHTML = '';
+
+            categories.forEach(cat => {
+                // Intro-skjermer
+                const slideDiv = document.createElement('div');
+                slideDiv.className = 'frame';
+                slideDiv.style.flex = '0 0 16.666%';
+                const slideSpan = document.createElement('span');
+                slideSpan.className = 'big-text oswald font-black gold-text';
+                slideSpan.innerText = cat.text;
+                slideDiv.appendChild(slideSpan);
+                individualSlides.appendChild(slideDiv);
+
+                // Spill-kortene (Kryssfade)
+                const wrapper = document.createElement('div');
+                wrapper.className = 'card-wrapper';
+
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                card.id = `card-${cat.id}`;
+                
+                const inner = document.createElement('div');
+                inner.className = 'card-inner';
+
+                // Game Front
+                const front = document.createElement('div');
+                front.className = 'card-front cursor-pointer';
+                front.onclick = () => {
+                    if (!card.classList.contains('flipped')) toggleExpand(cat.id, true);
+                };
+                
+                const label = document.createElement('span');
+                label.className = 'card-label gold-text oswald font-bold pointer-events-none';
+                label.innerText = cat.text;
+                front.appendChild(label);
+
+                // Game Back (Ren Fritekst Visning)
+                const back = document.createElement('div');
+                back.className = 'card-back';
+                
+                const qTextDisplay = document.createElement('div');
+                qTextDisplay.className = 'back-content custom-scrollbar overflow-y-auto';
+                qTextDisplay.innerText = cat.qText || '';
+                
+                back.appendChild(qTextDisplay);
+
+                inner.appendChild(front);
+                inner.appendChild(back);
+                card.appendChild(inner);
+                wrapper.appendChild(card);
+                gridContainer.appendChild(wrapper);
+            });
+        }
+
+        function updateSlide() {
+            roll.style.transform = `translateX(-${currentSlide * 12.5}%)`;
+        }
+
+        function toggleExpand(id, markAsUsed = true) {
+            if (currentSlide !== 7) return;
+            const card = document.getElementById(`card-${id}`);
+            const frameRect = frame.getBoundingClientRect();
+            
+            if (expandedId === id) {
+                // --- LUKK ---
+                expandedId = null;
+                const rect = JSON.parse(card.getAttribute('data-origin'));
+                
+                const cardRect = card.getBoundingClientRect();
+                card.style.transition = 'none'; 
+                card.style.top = (cardRect.top - frameRect.top) + 'px';
+                card.style.left = (cardRect.left - frameRect.left) + 'px';
+                card.style.width = cardRect.width + 'px';
+                card.style.height = cardRect.height + 'px';
+                
+                card.offsetHeight; 
+                card.style.transition = ''; 
+                
+                gridContainer.classList.remove('grid-dimmed');
+                card.classList.remove('expanded');
+                card.classList.add('is-closing');
+                
+                card.style.top = rect.top + 'px';
+                card.style.left = rect.left + 'px';
+                card.style.width = rect.width + 'px';
+                card.style.height = rect.height + 'px';
+                
+                setTimeout(() => {
+                    if (expandedId === null) {
+                        card.style.transition = 'none';
+                        card.style.position = 'relative';
+                        card.style.top = 'auto'; 
+                        card.style.left = 'auto';
+                        card.style.width = '100%'; 
+                        card.style.height = '100%'; 
+                        card.classList.remove('is-closing');
+                        
+                        // Først når den har landet skjult resetter vi den for neste gang
+                        card.classList.remove('flipped');
+                        
+                        card.offsetHeight; 
+                        card.style.transition = ''; 
+                        
+                        if (markAsUsed) {
+                            usedCategories.add(id);
+                            card.classList.add('used');
+                        }
+                    }
+                }, 600);
+            } else if (expandedId === null) {
+                // --- ÅPNE ---
+                if (usedCategories.has(id)) return;
+                
+                // Kjør pling-lyd når kategori velges og vokser!
+                playPling();
+
+                expandedId = id;
+                const cardRect = card.getBoundingClientRect();
+
+                const origin = {
+                    top: cardRect.top - frameRect.top,
+                    left: cardRect.left - frameRect.left,
+                    width: cardRect.width,
+                    height: cardRect.height
+                };
+                
+                card.setAttribute('data-origin', JSON.stringify(origin));
+                
+                card.style.transition = 'none';
+                card.style.position = 'absolute';
+                card.style.top = origin.top + 'px';
+                card.style.left = origin.left + 'px';
+                card.style.width = origin.width + 'px';
+                card.style.height = origin.height + 'px';
+                card.style.zIndex = '100';
+                
+                card.offsetHeight; 
+                card.style.transition = '';
+                
+                gridContainer.classList.add('grid-dimmed');
+                card.classList.add('expanded');
+
+                card.style.top = '0px';
+                card.style.left = '0px';
+                card.style.width = frameRect.width + 'px';
+                card.style.height = frameRect.height + 'px';
+
+                setTimeout(() => {
+                    if (expandedId === id) {
+                        card.style.transition = 'none';
+                        card.style.width = '100%';
+                        card.style.height = '100%';
+                        card.offsetHeight;
+                        card.style.transition = '';
+                        
+                        // Kryssfade automatisk hvis checkbox er huket av
+                        if (autoFlipEnabled) {
+                            card.classList.add('flipped');
+                        }
+                    }
+                }, 600);
+            }
+        }
+
+        function initParticles() {
+            const canvas = document.getElementById('particles-canvas');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            
+            function resize() {
+                const viewport = document.getElementById('app-viewport');
+                canvas.width = viewport.clientWidth || window.innerWidth;
+                canvas.height = viewport.clientHeight || window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            const goldColors = ['rgba(191, 149, 63, 0.7)', 'rgba(252, 246, 186, 0.6)', 'rgba(179, 135, 40, 0.8)', 'rgba(250, 204, 21, 0.6)'];
+
+            for(let i=0; i<100; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    s: Math.random() * 2 + 0.5,
+                    v: Math.random() * 0.1 + 0.02, 
+                    a: Math.random() * Math.PI * 2,
+                    c: goldColors[Math.floor(Math.random() * goldColors.length)]
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    ctx.fillStyle = p.c;
+                    p.y -= p.v;
+                    p.x += Math.sin(p.a) * 0.1;
+                    if(p.y < 0) p.y = canvas.height;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.s, 0, Math.PI*2);
+                    ctx.fill();
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        window.addEventListener('keydown', (e) => {
+            const ae = document.activeElement;
+            if (ae && (ae.isContentEditable || ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')) {
+                if (e.key === 'Escape') ae.blur();
+                return;
+            }
+
+            if (e.code === 'Space' && expandedId !== null) {
+                e.preventDefault(); 
+                document.getElementById(`card-${expandedId}`).classList.toggle('flipped');
+                return;
+            }
+            
+            if (expandedId === null) {
+                if (e.key === 'ArrowRight' && currentSlide < 7) { 
+                    currentSlide++; 
+                    updateSlide(); 
+                    playPling();
+                }
+                if (e.key === 'ArrowLeft' && currentSlide > 0) { 
+                    currentSlide--; 
+                    updateSlide(); 
+                    playPling();
+                }
+            }
+
+            const digitMatch = e.code.match(/^(Digit|Numpad)([1-6])$/);
+
+            if (digitMatch) {
+                const id = parseInt(digitMatch[2]);
+                
+                if (e.shiftKey && expandedId === null) {
+                    if (usedCategories.has(id)) {
+                        usedCategories.delete(id);
+                        document.getElementById(`card-${id}`).classList.remove('used');
+                    }
+                } else if (!e.shiftKey) {
+                    if (currentSlide === 7) toggleExpand(id, true);
+                    else { 
+                        currentSlide = 7; 
+                        updateSlide(); 
+                        setTimeout(() => toggleExpand(id, true), 1050); 
+                    }
+                }
+            }
+            
+            if ((e.key === 'Escape' || e.key === 'Backspace') && expandedId !== null) {
+                toggleExpand(expandedId, false);
+            }
+
+            if (e.code === 'KeyR' && expandedId === null) {
+                usedCategories.clear();
+                document.querySelectorAll('.category-card.used').forEach(c => c.classList.remove('used'));
+            }
+        });
+
+        // Start med oppsett-skjermen (grunnfjellet leses av initSetup)
+        initSetup();
+    </script>
+</body>
+</html>
