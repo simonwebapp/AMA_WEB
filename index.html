@@ -15,7 +15,8 @@
         }
 
         :root {
-            --gold-grad: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
+            /* Har justert fargeovergangene ørlite så de looper penere i bevegelse */
+            --gold-grad: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fcf6ba 75%, #aa771c 100%);
             --dark-blue-base: #050a18;
         }
 
@@ -64,11 +65,19 @@
 
         .gold-text {
             background: var(--gold-grad);
+            background-size: 200% 200%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             display: inline-block;
             text-transform: uppercase;
             caret-color: #fcf6ba;
+            animation: goldTextureFlow 6s ease-in-out infinite;
+        }
+
+        @keyframes goldTextureFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .gold-border {
@@ -123,7 +132,7 @@
         }
 
         .big-text {
-            font-size: 8.5vw;
+            font-size: 6.5vw;
             line-height: 1.1;
             letter-spacing: -0.01em;
             text-align: center;
@@ -176,18 +185,32 @@
             position: relative;
         }
 
-        /* Begge sider av kortet ligger oppå hverandre. Stroke (border) bruker nå vw for stabil tykkelse uansett skjerm. */
+        /* Begge sider av kortet ligger oppå hverandre. */
         .card-front, .card-back {
             position: absolute;
             inset: 0;
             background-color: transparent;
-            border: 0.3vw solid; 
-            border-image: var(--gold-grad) 1;
             display: flex;
             box-sizing: border-box;
-            transition: border-width 0.6s ease, opacity 0.5s ease;
+            transition: opacity 0.5s ease;
             width: 100%;
             height: 100%;
+        }
+
+        /* MAGISK LEVENDE GULLRAMME: Bruker pseudo-element for å kunne animere teksturen */
+        .card-front::before, .card-back::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            padding: 0.3vw; /* Tykkelsen på gullrammen */
+            background: var(--gold-grad);
+            background-size: 200% 200%;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            transition: padding 0.6s ease;
+            animation: goldTextureFlow 6s ease-in-out infinite;
         }
 
         .card-front {
@@ -218,8 +241,9 @@
 
         /* Tittel på forsiden */
         .card-label {
-            font-size: 2.6vw;
+            font-size: 2.0vw;
             line-height: 1.1;
+            letter-spacing: -0.01em;
             text-align: center;
             white-space: pre-wrap;
             display: block;
@@ -259,13 +283,14 @@
             box-shadow: 0 0 150px rgba(0,0,0,1);
         }
 
-        .category-card.expanded .card-front,
-        .category-card.expanded .card-back {
-            border-width: 0.8vw;
+        /* Tykkere levende ramme når kortet er ekspandert */
+        .category-card.expanded .card-front::before,
+        .category-card.expanded .card-back::before {
+            padding: 0.8vw;
         }
 
         /* Skalerer tekst og padding når kortet er stort */
-        .category-card.expanded .card-label { font-size: 9.2vw; }
+        .category-card.expanded .card-label { font-size: 6.5vw; }
         .category-card.expanded .back-content { 
             font-size: 4.0vw; 
             padding: 5vw;
@@ -276,21 +301,65 @@
             z-index: 100 !important;
         }
 
+        /* Skjuler ramme under morphing fra intro for Kategori 6 */
+        .category-card.morph-no-border {
+            box-shadow: none !important;
+        }
+        .category-card.morph-no-border .card-front::before,
+        .category-card.morph-no-border .card-back::before {
+            padding: 0vw !important;
+            opacity: 0;
+        }
+
+        /* Hvit flash-effekt på rammen når kortet lander */
+        .card-front::after, .card-back::after {
+            content: '';
+            position: absolute;
+            inset: -0.8vw; /* Utvider seg for å dekke gullrammen nøyaktig */
+            box-sizing: border-box;
+            border: 0.8vw solid white;
+            box-shadow: 0 0 80px rgba(255,255,255,1), inset 0 0 40px rgba(255,255,255,0.8);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease-out; /* Fader mykt ut over nesten et sekund */
+            z-index: 10;
+        }
+        .category-card.flash-trigger .card-front::after,
+        .category-card.flash-trigger .card-back::after {
+            opacity: 1;
+            transition: none; /* PÅ umiddelbart uten forsinkelse */
+        }
+
         .grid-dimmed .card-wrapper .category-card:not(.expanded):not(.is-closing) {
             opacity: 0;
             transform: scale(0.95);
             pointer-events: none;
         }
 
+        /* WOW EFFEKT NÅR GRIDET LANDER ETTER INTRO! */
+        .grid-wow-glow .category-card:not(.expanded):not(.used) {
+            animation: gridArrivalPulse 2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        @keyframes gridArrivalPulse {
+            0% { filter: drop-shadow(0 0 0px rgba(252,246,186,0)); transform: scale(1); }
+            15% { filter: drop-shadow(0 0 40px rgba(252,246,186,0.6)); transform: scale(1.03); }
+            100% { filter: drop-shadow(0 0 0px rgba(252,246,186,0)); transform: scale(1); }
+        }
+
+        /* BRUKTE KORT: Mye lavere opacity og statisk/dus ramme */
         .category-card.used {
-            opacity: 0.15;
+            opacity: 0.05;
             pointer-events: none;
         }
 
-        .category-card.used .card-front,
-        .category-card.used .card-back {
-            border-image: none;
-            border-color: #bf953f;
+        .category-card.used .card-front::before,
+        .category-card.used .card-back::before {
+            background: transparent;
+            border: 0.15vw solid rgba(191, 149, 63, 0.5);
+            -webkit-mask: none;
+            mask-composite: none;
+            padding: 0;
+            animation: none; /* Slår av tekstur-animasjonen for brukte kort */
         }
         
         /* Skjul alt innhold skikkelig på brukte kort */
@@ -377,9 +446,9 @@
                         <li><span class="text-[#bf953f] font-bold">Piltast Høyre/Venstre:</span> Bla frem og tilbake i introen</li>
                         <li><span class="text-[#bf953f] font-bold">ESC / Backspace:</span> Lukk kort uten å markere det som brukt</li>
                         <li><span class="text-[#bf953f] font-bold">Tall 1-6:</span> Åpne og lukk korresponderende kategori</li>
-                        <li><span class="text-[#bf953f] font-bold">Shift + 1-6:</span> Hent tilbake et kategori som er markert som brukt</li>
+                        <li><span class="text-[#bf953f] font-bold">Shift + 1-6:</span> Hent tilbake et kort som er markert som brukt</li>
                         <li><span class="text-[#bf953f] font-bold">Mellomrom (SPACE):</span> Vise/skjule kategorispm (Fade)</li>
-                        <li><span class="text-[#bf953f] font-bold">R:</span> Nullstill alle brukte kategorier på hele brettet</li>
+                        <li><span class="text-[#bf953f] font-bold">R:</span> Nullstill alle brukte kort på hele brettet</li>
                     </ul>
                 </div>
 
@@ -401,11 +470,11 @@
             <div class="frame">
                 <!-- JUSTER LOGOSTØRRELSE HER: Endre "width" og "height" verdiene under (vw = prosent av skjermbredden) -->
                 <div style="width: 48vw; height: 31.375vw;" class="flex items-center justify-center relative">
-                     <!-- Laster logo direkte fra samme mappe -->
-                     <img id="main-logo-img" src="logo.png" alt="Logo" style="max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 0 20px rgba(191,149,63,0.3));" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
+                     <!-- Laster logo direkte fra Google Drive med din ID -->
+                     <img id="main-logo-img" src="https://lh3.googleusercontent.com/d/1CIjXV1qGCYWRi3R_y00ZIAsM---A4mX5" alt="Logo" style="max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 0 20px rgba(191,149,63,0.3));" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
                      
                      <span id="logo-fallback" class="oswald text-4xl gold-text text-center" style="display: none; border: 0.3vw dashed #bf953f; padding: 3vw; border-radius: 24px;">
-                        MANGLER BILDE<br><span id="logo-fallback-text" class="text-[1.5vw] text-white/50">Sjekk at bildet heter 'logo.png' i GitHub-mappen din!</span>
+                        MANGLER BILDE<br><span id="logo-fallback-text" class="text-[1.5vw] text-white/50">Kunne ikke koble til Google Drive. Sjekk at maskinen har internett!</span>
                      </span>
                 </div>
             </div>
@@ -451,15 +520,6 @@
         const frame = document.getElementById('grid-frame');
 
         const flipIconSVG = '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8m0 0V3m0 5h5"></path></svg>';
-
-        // Spiller av lydfilen via Audio API
-        function playPling() {
-            const audio = document.getElementById('pling-audio');
-            if (audio) {
-                audio.currentTime = 0;
-                audio.play().catch(e => console.log('Krever klikk på skjermen for å spille lyd (nettleser-sikkerhet).', e));
-            }
-        }
 
         function createFlipEmblem(onClick, btnText) {
             const btn = document.createElement('div');
@@ -634,6 +694,118 @@
             roll.style.transform = `translateX(-${currentSlide * 12.5}%)`;
         }
 
+        // --- SPESIALANIMASJON: Krymp Kategori 6 til rutenettet ---
+        function morphCat6ToGrid() {
+            const card6 = document.getElementById('card-6');
+            const label6 = card6 ? card6.querySelector('.card-label') : null;
+            if(!card6 || !label6) return;
+            
+            // 1. Stopp vanlig sliding og flytt oss usynlig til rutenettet (Slide 8)
+            roll.style.transition = 'none';
+            currentSlide = 7;
+            
+            // Skjul alle kortene i rutenettet (1-6) umiddelbart
+            for(let i=1; i<=6; i++) {
+                const c = document.getElementById(`card-${i}`);
+                if(c) {
+                    c.style.transition = 'none';
+                    c.style.opacity = '0';
+                }
+            }
+
+            // Skjul den ekte teksten i kort 6 foreløpig (spøkelset gjør jobben)
+            label6.style.transition = 'none';
+            label6.style.opacity = '0';
+
+            updateSlide(); // Utfør det usynlige hoppet til rutenettet
+            
+            // 2. Lag en usynlig "Ghost"-tekst som er identisk med introen
+            const ghost = document.createElement('span');
+            ghost.className = 'big-text oswald font-bold gold-text';
+            ghost.innerText = categories[5].text; // Kategori 6 tekst
+            ghost.style.position = 'absolute';
+            ghost.style.zIndex = '9999';
+            ghost.style.top = '50%';
+            ghost.style.left = '50%';
+            ghost.style.transform = 'translate(-50%, -50%) scale(1)';
+            ghost.style.margin = '0';
+
+            const viewport = document.getElementById('app-viewport');
+            viewport.appendChild(ghost);
+            
+            // Tving nettleseren til å oppdatere layouten før magien
+            viewport.offsetHeight;
+
+            // 3. Regn ut matematisk nøyaktig hvor Ghost-teksten skal lande
+            const targetRect = label6.getBoundingClientRect();
+            const viewportRect = viewport.getBoundingClientRect();
+
+            const targetCenterX = (targetRect.left + targetRect.width / 2) - viewportRect.left;
+            const targetCenterY = (targetRect.top + targetRect.height / 2) - viewportRect.top;
+
+            const startCenterX = viewportRect.width / 2;
+            const startCenterY = viewportRect.height / 2;
+
+            const deltaX = targetCenterX - startCenterX;
+            const deltaY = targetCenterY - startCenterY;
+
+            // Skala-forhold fra 6.5vw (intro) til 2.0vw (rutenett)
+            const scale = 2.0 / 6.5;
+
+            // 4. Start selve animasjonen (krymp og flytt spøkelses-teksten)
+            ghost.style.transition = 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+            ghost.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px)) scale(${scale})`;
+
+            // 5. Ton mykt inn alle de statiske rammene i rutenettet veldig tidlig!
+            setTimeout(() => {
+                for(let i=1; i<=6; i++) {
+                    const c = document.getElementById(`card-${i}`);
+                    if(c) {
+                        c.style.transition = 'opacity 0.6s ease';
+                        c.style.opacity = '1';
+                    }
+                }
+            }, 100); // 100 millisekunder for å gi et hint av "bli-klar"
+
+            // 6. Rydd opp etter ferdig animasjon (akkurat når ghost lander)
+            setTimeout(() => {
+                // Bytt ut spøkelset med den ekte grid-teksten usynlig og raskt
+                label6.style.opacity = '';
+                ghost.remove();
+
+                setTimeout(() => {
+                    label6.style.transition = ''; // Skru på vanlig transition igjen
+                }, 50);
+                
+                // TØM INLINE-STYLES: Slik at CSS-klassene (.grid-dimmed) fungerer igjen når vi åpner kort!
+                for(let i=1; i<=6; i++) {
+                    const c = document.getElementById(`card-${i}`);
+                    if(c) {
+                        c.style.transition = '';
+                        c.style.opacity = '';
+                    }
+                }
+                
+                // --- WOW EFFEKT: Pulsering over hele rutenettet! ---
+                gridContainer.classList.add('grid-wow-glow');
+                setTimeout(() => {
+                    gridContainer.classList.remove('grid-wow-glow');
+                }, 2000); // Fjerner klassen når animasjonen er ferdig
+
+                // Slå på vanlig horisontal transition igjen for filmrullen
+                roll.style.transition = 'transform 1s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.5s ease';
+            }, 800); // Starter nøyaktig i det teksten lander
+        }
+
+        // Spiller av lydfilen via Audio API
+        function playPling() {
+            const audio = document.getElementById('pling-audio');
+            if (audio) {
+                audio.currentTime = 0;
+                audio.play().catch(e => console.log('Krever klikk på skjermen for å spille lyd (nettleser-sikkerhet).', e));
+            }
+        }
+
         function toggleExpand(id, markAsUsed = true) {
             if (currentSlide !== 7) return;
             const card = document.getElementById(`card-${id}`);
@@ -644,6 +816,9 @@
                 expandedId = null;
                 const rect = JSON.parse(card.getAttribute('data-origin'));
                 
+                // Fjernet: card.classList.remove('flipped'); her oppe slik at
+                // den holder på det den viste sist, helt til den lander i rutenettet.
+
                 const cardRect = card.getBoundingClientRect();
                 card.style.transition = 'none'; 
                 card.style.top = (cardRect.top - frameRect.top) + 'px';
@@ -689,9 +864,6 @@
                 // --- ÅPNE ---
                 if (usedCategories.has(id)) return;
                 
-                // Kjør pling-lyd når kategori velges og vokser!
-                playPling();
-
                 expandedId = id;
                 const cardRect = card.getBoundingClientRect();
 
@@ -730,6 +902,13 @@
                         card.style.height = '100%';
                         card.offsetHeight;
                         card.style.transition = '';
+                        
+                        // --- Flash og pling når den lander! ---
+                        playPling();
+                        card.classList.add('flash-trigger');
+                        
+                        // Fjerner klassen kjapt slik at CSS overtar den myke ut-fadingen
+                        setTimeout(() => card.classList.remove('flash-trigger'), 50);
                         
                         // Kryssfade automatisk hvis checkbox er huket av
                         if (autoFlipEnabled) {
@@ -772,7 +951,12 @@
                     ctx.fillStyle = p.c;
                     p.y -= p.v;
                     p.x += Math.sin(p.a) * 0.1;
-                    if(p.y < 0) p.y = canvas.height;
+                    
+                    // Holder partiklene på skjermen uendelig i alle retninger
+                    if(p.y < -10) p.y = canvas.height + 10;
+                    if(p.x < -10) p.x = canvas.width + 10;
+                    if(p.x > canvas.width + 10) p.x = -10;
+                    
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.s, 0, Math.PI*2);
                     ctx.fill();
@@ -797,9 +981,14 @@
             
             if (expandedId === null) {
                 if (e.key === 'ArrowRight' && currentSlide < 7) { 
-                    currentSlide++; 
-                    updateSlide(); 
-                    playPling();
+                    // Hvis vi står på Kategori 6 og trykker Høyre: Start Magien.
+                    if (currentSlide === 6) {
+                        morphCat6ToGrid();
+                    } else {
+                        currentSlide++; 
+                        updateSlide(); 
+                        playPling();
+                    }
                 }
                 if (e.key === 'ArrowLeft' && currentSlide > 0) { 
                     currentSlide--; 
