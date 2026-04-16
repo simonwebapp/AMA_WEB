@@ -455,7 +455,7 @@
                 <!-- Høyre: Lagre og Kjør -->
                 <div class="flex flex-col items-end gap-[1vw] pointer-events-auto">
                     <label class="flex items-center gap-[0.5vw] cursor-pointer hover:opacity-80 transition-opacity bg-black/60 p-[0.8vw] px-[1.2vw] rounded-xl border border-yellow-600/30 backdrop-blur-sm">
-                        <input type="checkbox" id="auto-flip-checkbox" class="w-[1.2vw] h-[1.2vw] accent-yellow-500 cursor-pointer" checked>
+                        <input type="checkbox" id="auto-flip-checkbox" class="w-[1.2vw] h-[1.2vw] accent-yellow-500 cursor-pointer">
                         <span class="font-inter text-[#fcf6ba] text-[1vw]">Auto-vis tekst når kategori åpnes</span>
                     </label>
 
@@ -508,7 +508,7 @@
         let currentSlide = 0; 
         let expandedId = null;
         let usedCategories = new Set();
-        let autoFlipEnabled = true;
+        let autoFlipEnabled = false;
 
         const STORAGE_KEY = 'alleMotAlleData_v3';
 
