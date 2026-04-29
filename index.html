@@ -6,17 +6,15 @@
     <title>Alle mot Alle - Gull-versjon</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Laster inn programfonten fra samme mappe */
         @font-face {
             font-family: 'Avenir';
-            src: url('avenir.ttf') format('truetype');
+            src: url('https://lh3.googleusercontent.com/d/1ZCICYW3XT0rFH7cT46lm1Bk312hWPD5v') format('truetype');
             font-weight: normal;
             font-style: normal;
         }
 
         :root {
-            /* Har justert fargeovergangene ørlite så de looper penere i bevegelse */
-            --gold-grad: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fcf6ba 75%, #aa771c 100%);
+            --gold-grad: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
             --dark-blue-base: #050a18;
         }
 
@@ -32,11 +30,9 @@
             align-items: center;
         }
 
-        /* Omdirigerer de gamle font-klassene til å bruke Avenir */
         .oswald { font-family: 'Avenir', sans-serif !important; }
         .font-inter { font-family: 'Avenir', sans-serif !important; }
 
-        /* 16:9 Hovedvindu */
         #app-viewport {
             position: relative;
             width: 100vw;
@@ -65,19 +61,11 @@
 
         .gold-text {
             background: var(--gold-grad);
-            background-size: 200% 200%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             display: inline-block;
             text-transform: uppercase;
             caret-color: #fcf6ba;
-            animation: goldTextureFlow 6s ease-in-out infinite;
-        }
-
-        @keyframes goldTextureFlow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
         }
 
         .gold-border {
@@ -85,7 +73,6 @@
             border-style: solid;
         }
 
-        /* Oppsett-meny */
         #setup-overlay {
             position: absolute;
             inset: 0;
@@ -106,18 +93,19 @@
             margin-bottom: 2vw;
         }
 
-        /* Filmrullen */
         #film-roll {
             display: none; 
             opacity: 0;
             height: 100%;
-            width: 800%;
+            width: 800%; /* 8 skjermer: 1 Logo, 6 Kategorier, 1 Grid */
             transition: transform 1s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.5s ease;
             will-change: transform;
             z-index: 2;
         }
 
+        /* --- CONTAINER QUERIES --- */
         .frame {
+            /* 12.5% er nøyaktig 1/8 av 800%. Sørger for at hver slide er eksakt 100vw! */
             flex: 0 0 12.5%;
             width: 100%;
             height: 100%;
@@ -125,23 +113,30 @@
             justify-content: center;
             align-items: center;
             position: relative;
+            container-type: inline-size; 
         }
 
         #grid-frame {
             position: relative;
         }
 
-        .big-text {
-            font-size: 6.5vw;
+        .big-text, .card-label {
+            font-size: var(--font-size, 8.5cqw);
             line-height: 1.1;
             letter-spacing: -0.01em;
             text-align: center;
             white-space: pre-wrap;
             width: 90%;
             outline: none;
+            position: relative;
+            z-index: 5;
+            filter: drop-shadow(0 0.2vw 0.5vw rgba(0,0,0,0.9));
         }
 
-        /* Spillets Grid */
+        .card-label.editable {
+            cursor: text;
+        }
+
         #grid-view-inner {
             width: 100%;
             height: 100%;
@@ -164,13 +159,13 @@
             position: static;
         }
 
-        /* FADE KORT STRUKTUR */
         .category-card {
             width: 100%;
             height: 100%;
             position: relative;
             z-index: 10;
             box-sizing: border-box;
+            container-type: inline-size; 
             transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
                         transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
                         top 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
@@ -185,32 +180,18 @@
             position: relative;
         }
 
-        /* Begge sider av kortet ligger oppå hverandre. */
         .card-front, .card-back {
             position: absolute;
             inset: 0;
             background-color: transparent;
+            border: 0.3vw solid; 
+            border-image: var(--gold-grad) 1;
             display: flex;
             box-sizing: border-box;
-            transition: opacity 0.5s ease;
+            transition: border-width 0.6s ease, opacity 0.5s ease;
             width: 100%;
             height: 100%;
-        }
-
-        /* MAGISK LEVENDE GULLRAMME: Bruker pseudo-element for å kunne animere teksturen */
-        .card-front::before, .card-back::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            padding: 0.3vw; /* Tykkelsen på gullrammen */
-            background: var(--gold-grad);
-            background-size: 200% 200%;
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            pointer-events: none;
-            transition: padding 0.6s ease;
-            animation: goldTextureFlow 6s ease-in-out infinite;
+            overflow: hidden;
         }
 
         .card-front {
@@ -227,7 +208,6 @@
             pointer-events: none;
         }
 
-        /* Når kortet aktiverer "spørsmåls-modus" (Kryssfade) */
         .category-card.flipped .card-front {
             opacity: 0;
             pointer-events: none;
@@ -239,95 +219,45 @@
             pointer-events: auto;
         }
 
-        /* Tittel på forsiden */
-        .card-label {
-            font-size: 2.0vw;
-            line-height: 1.1;
-            letter-spacing: -0.01em;
-            text-align: center;
-            white-space: pre-wrap;
-            display: block;
-            width: 90%;
-            outline: none;
-            transition: font-size 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-                        opacity 0.4s ease;
+        .card-image {
+            position: absolute;
+            pointer-events: none;
+            z-index: 0; 
+            object-fit: contain;
         }
 
-        .card-label.editable {
-            cursor: text;
-        }
-
-        /* Fritekst-felt på baksiden */
         .back-content {
             background: transparent;
             border: none;
             color: #fcf6ba;
             font-family: 'Avenir', sans-serif;
-            font-size: 1.0vw;
+            font-size: var(--q-font-size, 3.5cqw); 
             line-height: 1.35;
-            padding: 2vw; /* Standard luft fra kantene */
-            padding-right: 3.5vw; /* Litt ekstra plass til scroll og snu-knapp */
+            padding: 4cqw; 
+            padding-right: 7cqw; 
             width: 100%;
             height: 100%;
             outline: none;
             resize: none;
             white-space: pre-wrap;
             text-align: left;
-            transition: font-size 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
-                        padding 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 5;
+            text-shadow: 0 0.2vw 0.5vw rgba(0,0,0,0.9), 0 0.1vw 0.2vw rgba(0,0,0,0.5);
         }
 
-        /* Ekspandert */
         .category-card.expanded {
             z-index: 100 !important;
             box-shadow: 0 0 150px rgba(0,0,0,1);
         }
 
-        /* Tykkere levende ramme når kortet er ekspandert */
-        .category-card.expanded .card-front::before,
-        .category-card.expanded .card-back::before {
-            padding: 0.8vw;
-        }
-
-        /* Skalerer tekst og padding når kortet er stort */
-        .category-card.expanded .card-label { font-size: 6.5vw; }
-        .category-card.expanded .back-content { 
-            font-size: 4.0vw; 
-            padding: 5vw;
-            padding-right: 8vw;
+        .category-card.expanded .card-front,
+        .category-card.expanded .card-back {
+            border-width: 0.8vw;
         }
 
         .category-card.is-closing {
             z-index: 100 !important;
-        }
-
-        /* Skjuler ramme under morphing fra intro for Kategori 6 */
-        .category-card.morph-no-border {
-            box-shadow: none !important;
-        }
-        .category-card.morph-no-border .card-front::before,
-        .category-card.morph-no-border .card-back::before {
-            padding: 0vw !important;
-            opacity: 0;
-        }
-
-        /* Hvit flash-effekt på rammen når kortet lander */
-        .card-front::after, .card-back::after {
-            content: '';
-            position: absolute;
-            inset: -0.8vw; /* Utvider seg for å dekke gullrammen nøyaktig */
-            box-sizing: border-box;
-            border: 0.8vw solid white;
-            box-shadow: 0 0 80px rgba(255,255,255,1), inset 0 0 40px rgba(255,255,255,0.8);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.8s ease-out; /* Fader mykt ut over nesten et sekund */
-            z-index: 10;
-        }
-        .category-card.flash-trigger .card-front::after,
-        .category-card.flash-trigger .card-back::after {
-            opacity: 1;
-            transition: none; /* PÅ umiddelbart uten forsinkelse */
         }
 
         .grid-dimmed .card-wrapper .category-card:not(.expanded):not(.is-closing) {
@@ -336,40 +266,25 @@
             pointer-events: none;
         }
 
-        /* WOW EFFEKT NÅR GRIDET LANDER ETTER INTRO! */
-        .grid-wow-glow .category-card:not(.expanded):not(.used) {
-            animation: gridArrivalPulse 2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-        }
-        @keyframes gridArrivalPulse {
-            0% { filter: drop-shadow(0 0 0px rgba(252,246,186,0)); transform: scale(1); }
-            15% { filter: drop-shadow(0 0 40px rgba(252,246,186,0.6)); transform: scale(1.03); }
-            100% { filter: drop-shadow(0 0 0px rgba(252,246,186,0)); transform: scale(1); }
-        }
-
-        /* BRUKTE KORT: Mye lavere opacity og statisk/dus ramme */
         .category-card.used {
-            opacity: 5.05;
+            opacity: 0.3;
             pointer-events: none;
         }
 
-        .category-card.used .card-front::before,
-        .category-card.used .card-back::before {
-            background: transparent;
-            border: 0.15vw solid rgba(191, 149, 63, 0.5);
-            -webkit-mask: none;
-            mask-composite: none;
-            padding: 0;
-            animation: none; /* Slår av tekstur-animasjonen for brukte kort */
+        .category-card.used .card-front,
+        .category-card.used .card-back {
+            border-image: none;
+            border-color: #bf953f;
         }
         
-        /* Skjul alt innhold skikkelig på brukte kort */
         .category-card.used .card-label,
-        .category-card.used .back-content { 
+        .category-card.used .back-content,
+        .category-card.used .card-image { 
             opacity: 0 !important; 
             visibility: hidden !important;
         }
 
-        /* Snu-Emblem (Pill knapp) */
+        /* --- UI FOR KNAPPER PÅ KORTENE --- */
         .flip-emblem {
             position: absolute;
             top: 0.8vw;
@@ -405,72 +320,94 @@
             margin-top: 0.1vw;
         }
 
-        /* Pen scrollbar */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
+        /* --- FONT KONTROLL-KNAPP --- */
+        .font-controls {
+            position: absolute;
+            bottom: 0.8vw;
+            right: 0.8vw;
+            height: 2.2vw;
+            padding: 0 0.6vw;
+            background: rgba(191, 149, 63, 0.15);
+            border: 1px solid rgba(191, 149, 63, 0.5);
+            border-radius: 1.1vw; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.4vw;
+            z-index: 20;
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent; 
+        .font-controls button {
+            color: #fcf6ba;
+            font-size: 1.2vw;
+            font-weight: bold;
+            cursor: pointer;
+            width: 1.5vw;
+            height: 1.5vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+            background: rgba(0,0,0,0.3);
+            border: none;
+            outline: none;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(191, 149, 63, 0.5); 
-            border-radius: 4px;
+        .font-controls button:hover {
+            background: rgba(191, 149, 63, 0.8);
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(191, 149, 63, 0.8); 
+        .font-controls span {
+            font-family: 'Avenir', sans-serif;
+            font-size: 0.8vw;
+            color: #fcf6ba;
+            min-width: 1.5vw;
+            text-align: center;
+            font-weight: 700;
+            margin-top: 0.1vw;
         }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(191, 149, 63, 0.8); border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(191, 149, 63, 0.8); }
     </style>
 </head>
 <body>
 
-    <!-- Lydspiller for Pling (henter .wav direkte fra din egen server/mappe) -->
     <audio id="pling-audio" src="pling.wav" preload="auto"></audio>
 
     <div id="app-viewport">
         <canvas id="particles-canvas"></canvas>
         
-        <!-- Setup Skjerm -->
         <div id="setup-overlay">
             <h2 class="oswald text-[2.8vw] gold-text mb-[1.5vw]">OPPSETT AV SKJERMER</h2>
-            <div id="setup-grid">
-                <!-- Genereres dynamisk -->
-            </div>
+            <div id="setup-grid"></div>
             
-            <!-- Kontrollpanel Footer (Låst til bunn) -->
-            <div class="absolute bottom-0 left-0 w-full px-[3vw] pb-[2vw] flex justify-between items-end pointer-events-none">
+            <div class="absolute bottom-0 left-0 w-full px-[3vw] pb-[2vw] flex justify-between items-end pointer-events-none z-[1000]">
                 
-                <!-- Venstre: Instruksjoner for navigasjon (Horisontal) -->
+                <!-- ORIGINAL, KOMPAKT AVVIKLINGS-PANEL -->
                 <div class="text-left text-white/80 font-inter text-[0.85vw] leading-[1.5] pointer-events-auto bg-black/60 p-[1vw] px-[1.5vw] rounded-xl border border-yellow-600/30 backdrop-blur-sm max-w-[65%]">
-                    <h3 class="oswald text-[1.1vw] text-[#fcf6ba] mb-[0.5vw] tracking-wider">HVORDAN NAVIGERE:</h3>
+                    <h3 class="oswald text-[1.1vw] text-[#fcf6ba] mb-[0.5vw] tracking-wider uppercase font-bold">HVORDAN AVVIKLE:</h3>
                     <ul class="grid grid-cols-2 gap-x-[3vw] gap-y-[0.3vw] list-disc ml-[1.5vw] opacity-90">
-                        <li><span class="text-[#bf953f] font-bold">Piltast Høyre/Venstre:</span> Bla frem og tilbake i introen</li>
-                        <li><span class="text-[#bf953f] font-bold">ESC / Backspace:</span> Lukk kategori uten å markere det som brukt</li>
-                        <li><span class="text-[#bf953f] font-bold">Tall 1-6:</span> Åpne og lukk korresponderende kategori</li>
-                        <li><span class="text-[#bf953f] font-bold">Shift + 1-6:</span> Hent tilbake en kategori som er markert som brukt</li>
-                        <li><span class="text-[#bf953f] font-bold">Mellomrom (SPACE):</span> Vise/skjule kategorispm (Fade)</li>
-                        <li><span class="text-[#bf953f] font-bold">R:</span> Nullstill alle brukte kategorier på hele brettet</li>
+                        <li><span class="text-[#bf953f] font-bold">▶ / ◀ :</span> Bla i introen</li>
+                        <li><span class="text-[#bf953f] font-bold">1 - 6 :</span> Åpne / lukke kategori</li>
+                        <li><span class="text-[#bf953f] font-bold">SPACE :</span> Vise / skjule spørsmål</li>
+                        <li><span class="text-[#bf953f] font-bold">ESC :</span> Lukk uten å krysse av</li>
+                        <li><span class="text-[#bf953f] font-bold">Shift + 1-6:</span> Angre kryss på kategori</li>
+                        <li><span class="text-[#bf953f] font-bold">R :</span> Nullstill hele brettet</li>
                     </ul>
                 </div>
 
-                <!-- Høyre: Lagre og Kjør -->
+                <!-- LAGRE OG KJØR KNAPP (Låst til høyre) -->
                 <div class="flex flex-col items-end gap-[1vw] pointer-events-auto">
-                    <label class="flex items-center gap-[0.5vw] cursor-pointer hover:opacity-80 transition-opacity bg-black/60 p-[0.8vw] px-[1.2vw] rounded-xl border border-yellow-600/30 backdrop-blur-sm">
-                        <input type="checkbox" id="auto-flip-checkbox" class="w-[1.2vw] h-[1.2vw] accent-yellow-500 cursor-pointer">
-                        <span class="font-inter text-[#fcf6ba] text-[1vw]">Auto-vis tekst når kategori åpnes</span>
-                    </label>
-
-                    <button onclick="startApp()" class="oswald px-[3vw] py-[1vw] bg-yellow-500 text-black font-black text-[1.5vw] rounded-xl hover:scale-105 transition-transform shadow-[0_0_20px_rgba(250,204,21,0.4)]">LAGRE OG KJØR</button>
+                    <button onclick="startApp()" class="oswald px-[3vw] py-[1.2vw] bg-yellow-500 text-black font-black text-[1.4vw] rounded-xl hover:scale-105 transition-transform shadow-[0_0_30px_rgba(250,204,21,0.5)]">LAGRE OG KJØR</button>
                 </div>
             </div>
         </div>
 
-        <!-- Hovedspillet -->
+        <!-- Helt flat struktur for å unngå bredde-bugs! -->
         <div id="film-roll">
-            <!-- Slide 1: Logo -->
-            <div class="frame">
-                <!-- JUSTER LOGOSTØRRELSE HER: Endre "width" og "height" verdiene under (vw = prosent av skjermbredden) -->
+            <div class="frame" id="slide-logo">
                 <div style="width: 48vw; height: 31.375vw;" class="flex items-center justify-center relative">
-                     <!-- Laster logo direkte fra Google Drive med din ID -->
                      <img id="main-logo-img" src="https://lh3.googleusercontent.com/d/1CIjXV1qGCYWRi3R_y00ZIAsM---A4mX5" alt="Logo" style="max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 0 20px rgba(191,149,63,0.3));" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
                      
                      <span id="logo-fallback" class="oswald text-4xl gold-text text-center" style="display: none; border: 0.3vw dashed #bf953f; padding: 3vw; border-radius: 24px;">
@@ -479,10 +416,8 @@
                 </div>
             </div>
             
-            <!-- Slides 2-7 -->
-            <div id="individual-slides" class="flex h-full" style="width: 75%;"></div>
+            <!-- Slides 1-6 (Intro) injiseres automatisk her av JS rett før #grid-frame -->
             
-            <!-- Slide 8: Grid -->
             <div class="frame" id="grid-frame">
                 <div id="grid-view-inner">
                     <div id="grid-container"></div>
@@ -493,33 +428,85 @@
     </div>
 
     <script>
-        // --- STANDARD INNHOLD (Hardkodet grunnfjell) ---
-        // Du kan skrive standardtekstene her. Oppsett-skjermen vil lese dette 
-        // første gang, og deretter huske dine endringer via LocalStorage.
+        // --- STANDARD INNHOLD MED OPPDATERT MANUS FOR MEDIADAGEN 2026 ---
         let categories = [
-            { id: 1, text: "KATEGORI 1", qText: "Spørsmål 1...\n\nSpørsmål 2...\n\nSpørsmål 3..." },
-            { id: 2, text: "KATEGORI 2", qText: "Spørsmål tekst her..." },
-            { id: 3, text: "KATEGORI 3", qText: "Spørsmål tekst her..." },
-            { id: 4, text: "KATEGORI 4", qText: "Spørsmål tekst her..." },
-            { id: 5, text: "KATEGORI 5", qText: "Spørsmål tekst her..." },
-            { id: 6, text: "KATEGORI 6", qText: "Spørsmål tekst her..." }
+            { 
+                id: 1, 
+                text: "DEN VANSKELIGSTE\nJOBBEN I NORSK TV", 
+                qText: "- Hva har disse tre til felles?\n\n- Fellesforbundet er en del av LO. Hva heter LO-lederen i dag?\n\n- Hvem står bak denne fengende kjærlighetssangen?\n\n- Hva het det ukentlige debattprogrammet på TV2 som delte navn med en eldre norrøn duelltype?",
+                showImage: false, imageSrc: "bilde1.png", 
+                imageStyle: "width: 60%; height: 60%; top: 50%; left: 50%; transform: translate(-50%, -50%);",
+                fontSize: "7cqw",
+                qFontSize: "2.5cqw"
+            },
+            { 
+                id: 2, 
+                text: "ETTER 24 SESONGER\nSLITER JEG IKKE LENGER\nMED Å TRU AT NOKON\nKUNNE BU DER", 
+                qText: "- Hva heter duoen bak denne låta?\n\n- Hvilke to ord ble sagt på slutten av hver episode av Trygdekontoret?\n\n- Hva kalles det når kvinner opptar en ekstra sitteplass med vesken sin?\n\n- Hva heter briten som ble landskjent i siste sesong av \"Der ingen skulle tru at nokon kunne bu\"?\n\nELLER:\n- Hvem kjøpte i 2023 den dyreste boligen som noen gang er solgt i Norge?",
+                showImage: false, imageSrc: "bilde2.png",
+                imageStyle: "width: 60%; height: 60%; top: 50%; left: 50%; transform: translate(-50%, -50%);",
+                fontSize: "7cqw",
+                qFontSize: "2.5cqw"
+            },
+            { 
+                id: 3, 
+                text: "OPPA\nGANGFELT\nSTYLE", 
+                qText: "- Hvilket råd fikk Morten Abel av Kristoffer Hivju under leseprøvene til serien Mord i Sogn?\n\n- Hva heter denne artisten?\n\n- Nevn én som har vært redaktør for det feministiske magasinet Fett.\n\n- Hva heter det mest kjente kvartalet i New Orleans?",
+                showImage: false, imageSrc: "bilde3.png",
+                imageStyle: "width: 60%; height: 60%; top: 50%; left: 50%; transform: translate(-50%, -50%);",
+                fontSize: "8.5cqw",
+                qFontSize: "2.5cqw" 
+            },
+            { 
+                id: 4, 
+                text: "JA TIL FRED,\nMEN LITT KRIG ER GREIT,\nSÅ LENGE JEG FÅR SE\nMER TIL PALLE YDSTEBØ", 
+                qText: "- Forrige gang vi var i krig med Sverige tapte vi, og endte i union. Når var det?\n\n- Hvem slo ut Norge i 8.delsfinalen i fotball-VM 1998?\n\n- Hvor befinner du deg hvis du dorger?\n\n- Hvilket nummer assosierer vi med soldat August Stomperud?",
+                showImage: false, imageSrc: "bilde4.png",
+                imageStyle: "width: 60%; height: 60%; top: 50%; left: 50%; transform: translate(-50%, -50%);",
+                fontSize: "7cqw",
+                qFontSize: "2.5cqw" 
+            },
+            { 
+                id: 5, 
+                text: "", 
+                qText: "- Hadde Kåre Willoch hår på toppen av hodet da Jon Almaas ble født i 1967?\n\n- Missen Ángela Ponce representerte Spania i Miss Universe 2018. Hva gjorde henne spesiell?\n\n- Nissen i denne filmen spilles av David Harbour, som ble skilt fra hvem i 2025?\n\n- Spissen av Spania heter Gibraltar. Hvilket land ligger på den andre siden av Gibraltarstredet?",
+                showImage: true, imageSrc: "1332_K6_Jon gigapenis.png",
+                imageStyle: "width: 103%; height: 103%; top: 50%; left: 50%; transform: translate(-50%, -50%);",
+                fontSize: "7cqw",
+                qFontSize: "2.5cqw" 
+            },
+            { 
+                id: 6, 
+                text: "DEN UBEHAGELIGE\n GJETTELEKEN SOM\nOPPSTÅR NÅR DU HAR\nVASKET HENDENE PÅ ET\nFREMMED BAD OG MÅ\nVELGE HVILKET HÅNDKLE\nDU SKAL BRUKE", 
+                qText: "- K.P. er initialene til artisten Kevin Parker. Under hvilket navn lager han musikk?\n\n- Hva kalles massen som brukes til å binde sammen mursteiner og oftest inneholder sement, vann og sand?\n\n- Steinar Klouman Hallert og Erlend Mørch lagde en animasjonsserie for NRK i 2024. Hva heter den?\n\n- Hva heter treningsøvelsen for kjernemuskulatur som Jon demonstrerer her?",
+                showImage: false, imageSrc: "bilde6.png",
+                imageStyle: "width: 60%; height: 60%; top: 50%; left: 50%; transform: translate(-50%, -50%);",
+                fontSize: "5.8cqw",
+                qFontSize: "2.5cqw" 
+            }
         ];
 
         let currentSlide = 0; 
         let expandedId = null;
         let usedCategories = new Set();
-        let autoFlipEnabled = false;
 
-        const STORAGE_KEY = 'alleMotAlleData_v3';
+        const STORAGE_KEY = 'alleMotAlleData_v20'; // Oppdatert minne-nøkkel
 
         const setupOverlay = document.getElementById('setup-overlay');
         const setupGrid = document.getElementById('setup-grid');
         const roll = document.getElementById('film-roll');
         const gridContainer = document.getElementById('grid-container');
-        const individualSlides = document.getElementById('individual-slides');
         const frame = document.getElementById('grid-frame');
 
         const flipIconSVG = '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8m0 0V3m0 5h5"></path></svg>';
+
+        function playPling() {
+            const audio = document.getElementById('pling-audio');
+            if (audio) {
+                audio.currentTime = 0;
+                audio.play().catch(e => console.log('Krever klikk på skjermen for å spille lyd.', e));
+            }
+        }
 
         function createFlipEmblem(onClick, btnText) {
             const btn = document.createElement('div');
@@ -532,21 +519,28 @@
             return btn;
         }
 
-        // --- OPPSETT (SETUP GRID) ---
         function initSetup() {
-            // 1. Last inn lagrede data før vi bygger oppsettet
             const saved = localStorage.getItem(STORAGE_KEY);
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
-                    if (parsed.categories) categories = parsed.categories;
-                    if (parsed.autoFlip !== undefined) autoFlipEnabled = parsed.autoFlip;
+                    if (parsed.categories) {
+                        categories = categories.map(cat => {
+                            const savedCat = parsed.categories.find(c => c.id === cat.id);
+                            return savedCat ? { 
+                                ...cat, 
+                                text: savedCat.text, 
+                                qText: savedCat.qText, 
+                                fontSize: savedCat.fontSize,
+                                qFontSize: savedCat.qFontSize
+                            } : cat;
+                        });
+                    }
                 } catch (e) {
                     console.error("Kunne ikke laste lagrede data", e);
                 }
             }
 
-            document.getElementById('auto-flip-checkbox').checked = autoFlipEnabled;
             setupGrid.innerHTML = '';
             
             categories.forEach(cat => {
@@ -559,12 +553,22 @@
                 const inner = document.createElement('div');
                 inner.className = 'card-inner';
 
-                // Setup Front (Kategori-navn)
                 const front = document.createElement('div');
                 front.className = 'card-front';
                 
+                if (cat.showImage && cat.imageSrc) {
+                    const img = document.createElement('img');
+                    img.src = cat.imageSrc;
+                    img.className = 'card-image';
+                    img.style.cssText = cat.imageStyle; 
+                    front.appendChild(img);
+                }
+
                 const label = document.createElement('span');
                 label.className = 'card-label gold-text editable oswald font-bold';
+                
+                label.style.setProperty('--font-size', cat.fontSize || '8.5cqw');
+                
                 label.contentEditable = "true";
                 label.spellcheck = false;
                 label.innerText = cat.text;
@@ -579,7 +583,41 @@
                 front.appendChild(label);
                 front.appendChild(createFlipEmblem(() => card.classList.toggle('flipped'), 'VISE SPM'));
 
-                // Setup Back (Fritekst-spørsmål)
+                // --- FONT STØRRELSE KONTROLLER (FORSIDE) ---
+                const fontControls = document.createElement('div');
+                fontControls.className = 'font-controls';
+                
+                let currentSize = parseFloat(cat.fontSize) || 8.5;
+                
+                const minusBtn = document.createElement('button');
+                minusBtn.innerText = '-';
+                const plusBtn = document.createElement('button');
+                plusBtn.innerText = '+';
+                const sizeDisplay = document.createElement('span');
+                sizeDisplay.innerText = currentSize.toFixed(1);
+                
+                minusBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    currentSize = Math.max(1, currentSize - 0.5);
+                    sizeDisplay.innerText = currentSize.toFixed(1);
+                    cat.fontSize = currentSize + 'cqw';
+                    label.style.setProperty('--font-size', cat.fontSize);
+                };
+                
+                plusBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    currentSize = Math.min(20, currentSize + 0.5);
+                    sizeDisplay.innerText = currentSize.toFixed(1);
+                    cat.fontSize = currentSize + 'cqw';
+                    label.style.setProperty('--font-size', cat.fontSize);
+                };
+
+                fontControls.appendChild(minusBtn);
+                fontControls.appendChild(sizeDisplay);
+                fontControls.appendChild(plusBtn);
+                front.appendChild(fontControls);
+
+                // --- BAKSIDE (SPØRSMÅL) ---
                 const back = document.createElement('div');
                 back.className = 'card-back';
                 
@@ -590,7 +628,43 @@
                 qArea.placeholder = "Fyll inn kategorispørsmål her...\n\nIngen overskrift, ingen bokser.\nBruk store og små bokstaver som du vil.";
                 qArea.value = cat.qText || ""; 
                 qArea.id = `setup-q-${cat.id}`;
+                
+                qArea.style.setProperty('--q-font-size', cat.qFontSize || '3.5cqw');
                 back.appendChild(qArea);
+
+                // --- FONT STØRRELSE KONTROLLER (BAKSIDE / SPØRSMÅL) ---
+                const qFontControls = document.createElement('div');
+                qFontControls.className = 'font-controls';
+                
+                let currentQSize = parseFloat(cat.qFontSize) || 3.5;
+                
+                const qMinusBtn = document.createElement('button');
+                qMinusBtn.innerText = '-';
+                const qPlusBtn = document.createElement('button');
+                qPlusBtn.innerText = '+';
+                const qSizeDisplay = document.createElement('span');
+                qSizeDisplay.innerText = currentQSize.toFixed(1);
+                
+                qMinusBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    currentQSize = Math.max(1, currentQSize - 0.5); 
+                    qSizeDisplay.innerText = currentQSize.toFixed(1);
+                    cat.qFontSize = currentQSize + 'cqw';
+                    qArea.style.setProperty('--q-font-size', cat.qFontSize);
+                };
+                
+                qPlusBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    currentQSize = Math.min(15, currentQSize + 0.5); 
+                    qSizeDisplay.innerText = currentQSize.toFixed(1);
+                    cat.qFontSize = currentQSize + 'cqw';
+                    qArea.style.setProperty('--q-font-size', cat.qFontSize);
+                };
+
+                qFontControls.appendChild(qMinusBtn);
+                qFontControls.appendChild(qSizeDisplay);
+                qFontControls.appendChild(qPlusBtn);
+                back.appendChild(qFontControls);
 
                 inner.appendChild(front);
                 inner.appendChild(back);
@@ -602,24 +676,40 @@
             initParticles();
         }
 
-        // --- LAGRE OG START ---
         function startApp() {
-            autoFlipEnabled = document.getElementById('auto-flip-checkbox').checked;
+            // --- LYD-HACK FOR NETTLESERE ---
+            const audio = document.getElementById('pling-audio');
+            if (audio) {
+                audio.muted = true;
+                let playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        audio.pause();
+                        audio.currentTime = 0;
+                        audio.muted = false;
+                    }).catch(e => console.log("Lyd-hack feilet: ", e));
+                }
+            }
 
             categories = categories.map(cat => {
                 const el = document.getElementById(`setup-input-${cat.id}`);
                 const qText = document.getElementById(`setup-q-${cat.id}`).value;
+                const originalCat = categories.find(c => c.id === cat.id);
+                
                 return {
                     id: cat.id,
-                    text: el.innerText.trim().toUpperCase() || `KATEGORI ${cat.id}`,
-                    qText: qText
+                    text: el.innerText.trim().toUpperCase(),
+                    qText: qText,
+                    showImage: originalCat.showImage, 
+                    imageSrc: originalCat.imageSrc,
+                    imageStyle: originalCat.imageStyle,
+                    fontSize: originalCat.fontSize,
+                    qFontSize: originalCat.qFontSize
                 };
             });
 
-            // LAGRING: Lagre alt til nettleseren (localStorage)
             localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                categories: categories,
-                autoFlip: autoFlipEnabled
+                categories: categories
             }));
 
             buildGame();
@@ -633,23 +723,36 @@
             }, 500);
         }
 
-        // --- HOVEDSPILL (GAME GRID) ---
         function buildGame() {
-            individualSlides.innerHTML = '';
+            document.querySelectorAll('.intro-slide').forEach(el => el.remove());
             gridContainer.innerHTML = '';
 
             categories.forEach(cat => {
-                // Intro-skjermer
+                // -------------------------------------------
+                // 1. INTRO-SKJERMEN (ÅPNINGEN)
+                // -------------------------------------------
                 const slideDiv = document.createElement('div');
-                slideDiv.className = 'frame';
-                slideDiv.style.flex = '0 0 16.666%';
+                slideDiv.className = 'frame intro-slide';
+                
+                if (cat.showImage && cat.imageSrc) {
+                    const img = document.createElement('img');
+                    img.src = cat.imageSrc;
+                    img.className = 'card-image';
+                    img.style.cssText = cat.imageStyle; 
+                    slideDiv.appendChild(img);
+                }
+
                 const slideSpan = document.createElement('span');
                 slideSpan.className = 'big-text oswald font-black gold-text';
+                slideSpan.style.setProperty('--font-size', cat.fontSize || '8.5cqw');
                 slideSpan.innerText = cat.text;
                 slideDiv.appendChild(slideSpan);
-                individualSlides.appendChild(slideDiv);
+                
+                roll.insertBefore(slideDiv, frame);
 
-                // Spill-kortene (Kryssfade)
+                // -------------------------------------------
+                // 2. SPILL-KORTENE (GRID & EXPANDED)
+                // -------------------------------------------
                 const wrapper = document.createElement('div');
                 wrapper.className = 'card-wrapper';
 
@@ -660,26 +763,33 @@
                 const inner = document.createElement('div');
                 inner.className = 'card-inner';
 
-                // Game Front
                 const front = document.createElement('div');
                 front.className = 'card-front cursor-pointer';
                 front.onclick = () => {
                     if (!card.classList.contains('flipped')) toggleExpand(cat.id, true);
                 };
                 
+                if (cat.showImage && cat.imageSrc) {
+                    const img = document.createElement('img');
+                    img.src = cat.imageSrc;
+                    img.className = 'card-image';
+                    img.style.cssText = cat.imageStyle; 
+                    front.appendChild(img);
+                }
+
                 const label = document.createElement('span');
                 label.className = 'card-label gold-text oswald font-bold pointer-events-none';
+                label.style.setProperty('--font-size', cat.fontSize || '8.5cqw');
                 label.innerText = cat.text;
                 front.appendChild(label);
 
-                // Game Back (Ren Fritekst Visning)
                 const back = document.createElement('div');
                 back.className = 'card-back';
                 
                 const qTextDisplay = document.createElement('div');
                 qTextDisplay.className = 'back-content custom-scrollbar overflow-y-auto';
                 qTextDisplay.innerText = cat.qText || '';
-                
+                qTextDisplay.style.setProperty('--q-font-size', cat.qFontSize || '3.5cqw');
                 back.appendChild(qTextDisplay);
 
                 inner.appendChild(front);
@@ -694,17 +804,14 @@
             roll.style.transform = `translateX(-${currentSlide * 12.5}%)`;
         }
 
-        // --- SPESIALANIMASJON: Krymp Kategori 6 til rutenettet ---
         function morphCat6ToGrid() {
             const card6 = document.getElementById('card-6');
             const label6 = card6 ? card6.querySelector('.card-label') : null;
             if(!card6 || !label6) return;
             
-            // 1. Stopp vanlig sliding og flytt oss usynlig til rutenettet (Slide 8)
             roll.style.transition = 'none';
             currentSlide = 7;
             
-            // Skjul alle kortene i rutenettet (1-6) umiddelbart
             for(let i=1; i<=6; i++) {
                 const c = document.getElementById(`card-${i}`);
                 if(c) {
@@ -713,31 +820,51 @@
                 }
             }
 
-            // Skjul den ekte teksten i kort 6 foreløpig (spøkelset gjør jobben)
             label6.style.transition = 'none';
             label6.style.opacity = '0';
-
-            updateSlide(); // Utfør det usynlige hoppet til rutenettet
             
-            // 2. Lag en usynlig "Ghost"-tekst som er identisk med introen
-            const ghost = document.createElement('span');
-            ghost.className = 'big-text oswald font-bold gold-text';
-            ghost.innerText = categories[5].text; // Kategori 6 tekst
+            const img6 = card6.querySelector('.card-image');
+            if(img6) {
+                img6.style.transition = 'none';
+                img6.style.opacity = '0';
+            }
+
+            updateSlide(); 
+            
+            const ghost = document.createElement('div');
+            ghost.className = 'frame'; 
             ghost.style.position = 'absolute';
             ghost.style.zIndex = '9999';
-            ghost.style.top = '50%';
-            ghost.style.left = '50%';
-            ghost.style.transform = 'translate(-50%, -50%) scale(1)';
+            ghost.style.top = '0';
+            ghost.style.left = '0';
+            // HER ER FIKSEN FOR SNAP-BUGEN: Den må være eksakt 100% av viewport for å treffe senter perfekt!
+            ghost.style.width = '100%';
+            ghost.style.height = '100%';
             ghost.style.margin = '0';
+            ghost.style.containerType = 'inline-size'; 
+
+            const cat6Data = categories[5];
+
+            if (cat6Data.showImage && cat6Data.imageSrc) {
+                const ghostImg = document.createElement('img');
+                ghostImg.src = cat6Data.imageSrc;
+                ghostImg.className = 'card-image';
+                ghostImg.style.cssText = cat6Data.imageStyle; 
+                ghost.appendChild(ghostImg);
+            }
+
+            const ghostText = document.createElement('span');
+            ghostText.className = 'big-text oswald font-bold gold-text';
+            ghostText.style.setProperty('--font-size', cat6Data.fontSize || '8.5cqw');
+            ghostText.innerText = cat6Data.text;
+            ghost.appendChild(ghostText);
 
             const viewport = document.getElementById('app-viewport');
             viewport.appendChild(ghost);
             
-            // Tving nettleseren til å oppdatere layouten før magien
             viewport.offsetHeight;
 
-            // 3. Regn ut matematisk nøyaktig hvor Ghost-teksten skal lande
-            const targetRect = label6.getBoundingClientRect();
+            const targetRect = card6.getBoundingClientRect(); // Låser nøyaktig mot hele kortets omkrets
             const viewportRect = viewport.getBoundingClientRect();
 
             const targetCenterX = (targetRect.left + targetRect.width / 2) - viewportRect.left;
@@ -749,14 +876,11 @@
             const deltaX = targetCenterX - startCenterX;
             const deltaY = targetCenterY - startCenterY;
 
-            // Skala-forhold fra 6.5vw (intro) til 2.0vw (rutenett)
-            const scale = 2.0 / 6.5;
+            const scale = targetRect.width / viewportRect.width;
 
-            // 4. Start selve animasjonen (krymp og flytt spøkelses-teksten)
             ghost.style.transition = 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
-            ghost.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px)) scale(${scale})`;
+            ghost.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${scale})`;
 
-            // 5. Ton mykt inn alle de statiske rammene i rutenettet veldig tidlig!
             setTimeout(() => {
                 for(let i=1; i<=6; i++) {
                     const c = document.getElementById(`card-${i}`);
@@ -765,19 +889,19 @@
                         c.style.opacity = '1';
                     }
                 }
-            }, 100); // 100 millisekunder for å gi et hint av "bli-klar"
+            }, 100); 
 
-            // 6. Rydd opp etter ferdig animasjon (akkurat når ghost lander)
             setTimeout(() => {
-                // Bytt ut spøkelset med den ekte grid-teksten usynlig og raskt
                 label6.style.opacity = '';
+                if(img6) img6.style.opacity = '';
+                
                 ghost.remove();
 
                 setTimeout(() => {
-                    label6.style.transition = ''; // Skru på vanlig transition igjen
+                    label6.style.transition = ''; 
+                    if(img6) img6.style.transition = '';
                 }, 50);
                 
-                // TØM INLINE-STYLES: Slik at CSS-klassene (.grid-dimmed) fungerer igjen når vi åpner kort!
                 for(let i=1; i<=6; i++) {
                     const c = document.getElementById(`card-${i}`);
                     if(c) {
@@ -786,24 +910,13 @@
                     }
                 }
                 
-                // --- WOW EFFEKT: Pulsering over hele rutenettet! ---
                 gridContainer.classList.add('grid-wow-glow');
                 setTimeout(() => {
                     gridContainer.classList.remove('grid-wow-glow');
-                }, 2000); // Fjerner klassen når animasjonen er ferdig
+                }, 2000); 
 
-                // Slå på vanlig horisontal transition igjen for filmrullen
                 roll.style.transition = 'transform 1s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.5s ease';
-            }, 800); // Starter nøyaktig i det teksten lander
-        }
-
-        // Spiller av lydfilen via Audio API
-        function playPling() {
-            const audio = document.getElementById('pling-audio');
-            if (audio) {
-                audio.currentTime = 0;
-                audio.play().catch(e => console.log('Krever klikk på skjermen for å spille lyd (nettleser-sikkerhet).', e));
-            }
+            }, 800);
         }
 
         function toggleExpand(id, markAsUsed = true) {
@@ -816,9 +929,6 @@
                 expandedId = null;
                 const rect = JSON.parse(card.getAttribute('data-origin'));
                 
-                // Fjernet: card.classList.remove('flipped'); her oppe slik at
-                // den holder på det den viste sist, helt til den lander i rutenettet.
-
                 const cardRect = card.getBoundingClientRect();
                 card.style.transition = 'none'; 
                 card.style.top = (cardRect.top - frameRect.top) + 'px';
@@ -848,7 +958,6 @@
                         card.style.height = '100%'; 
                         card.classList.remove('is-closing');
                         
-                        // Først når den har landet skjult resetter vi den for neste gang
                         card.classList.remove('flipped');
                         
                         card.offsetHeight; 
@@ -903,17 +1012,10 @@
                         card.offsetHeight;
                         card.style.transition = '';
                         
-                        // --- Flash og pling når den lander! ---
                         playPling();
                         card.classList.add('flash-trigger');
                         
-                        // Fjerner klassen kjapt slik at CSS overtar den myke ut-fadingen
                         setTimeout(() => card.classList.remove('flash-trigger'), 50);
-                        
-                        // Kryssfade automatisk hvis checkbox er huket av
-                        if (autoFlipEnabled) {
-                            card.classList.add('flipped');
-                        }
                     }
                 }, 600);
             }
@@ -952,7 +1054,6 @@
                     p.y -= p.v;
                     p.x += Math.sin(p.a) * 0.1;
                     
-                    // Holder partiklene på skjermen uendelig i alle retninger
                     if(p.y < -10) p.y = canvas.height + 10;
                     if(p.x < -10) p.x = canvas.width + 10;
                     if(p.x > canvas.width + 10) p.x = -10;
@@ -981,7 +1082,6 @@
             
             if (expandedId === null) {
                 if (e.key === 'ArrowRight' && currentSlide < 7) { 
-                    // Hvis vi står på Kategori 6 og trykker Høyre: Start Magien.
                     if (currentSlide === 6) {
                         morphCat6ToGrid();
                     } else {
@@ -1027,7 +1127,6 @@
             }
         });
 
-        // Start med oppsett-skjermen (grunnfjellet leses av initSetup)
         initSetup();
     </script>
 </body>
