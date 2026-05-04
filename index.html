@@ -414,12 +414,12 @@
                 <div class="text-left text-white/80 font-inter text-[0.85vw] leading-[1.5] pointer-events-auto bg-black/60 p-[1vw] px-[1.5vw] rounded-xl border border-yellow-600/30 backdrop-blur-sm max-w-[65%]">
                     <h3 class="oswald text-[1.1vw] text-[#fcf6ba] mb-[0.5vw] tracking-wider uppercase font-bold">HVORDAN AVVIKLE:</h3>
                     <ul class="grid grid-cols-2 gap-x-[3vw] gap-y-[0.3vw] list-disc ml-[1.5vw] opacity-90">
-                        <li><span class="text-[#bf953f] font-bold">▶ / ◀ :</span> Bla i introen</li>
+                        <li><span class="text-[#bf953f] font-bold">▶ / ◀ :</span> Bruk piltast høyre for bla i introen</li>
                         <li><span class="text-[#bf953f] font-bold">1 - 6 :</span> Åpne / lukke kategori</li>
-                        <li><span class="text-[#bf953f] font-bold">SPACE :</span> Vise / skjule spørsmål</li>
-                        <li><span class="text-[#bf953f] font-bold">Shift + 1-6:</span> Angre kryss på kategori</li>
-                        <li><span class="text-[#bf953f] font-bold">ESC :</span> Lukk uten å krysse av</li>
-                        <li><span class="text-[#bf953f] font-bold">R :</span> Nullstill hele brettet</li>
+                        <li><span class="text-[#bf953f] font-bold">SPACE :</span> Vise / skjule spørsmål-side</li>
+                        <li><span class="text-[#bf953f] font-bold">Shift + 1-6:</span> Reset en kategori</li>
+                        <li><span class="text-[#bf953f] font-bold">ESC :</span> Angre åpning av nylig valgt kategori</li>
+                        <li><span class="text-[#bf953f] font-bold">R :</span> Reset alle kategorier </li>
                     </ul>
                 </div>
 
@@ -512,7 +512,7 @@
         let expandedId = null;
         let usedCategories = new Set();
 
-        const STORAGE_KEY = 'alleMotAlleData_FINAL_v26';
+        const STORAGE_KEY = 'alleMotAlleData_FINAL_v28';
 
         const setupOverlay = document.getElementById('setup-overlay');
         const setupGrid = document.getElementById('setup-grid');
