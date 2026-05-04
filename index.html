@@ -5,11 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alle mot Alle - Gull-versjon</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
     <style>
+        /* Laster inn fonten lokalt fra PCen din */
         @font-face {
             font-family: 'Avenir';
-            src: url('https://lh3.googleusercontent.com/d/1ZCICYW3XT0rFH7cT46lm1Bk312hWPD5v') format('truetype');
+            src: url('avenir.ttf') format('truetype');
             font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Lexend Deca';
+            src: url('LexendDeca-Regular.ttf') format('truetype');
+            font-weight: 400;
             font-style: normal;
         }
 
@@ -68,11 +77,6 @@
             caret-color: #fcf6ba;
         }
 
-        .gold-border {
-            border-image: var(--gold-grad) 1;
-            border-style: solid;
-        }
-
         #setup-overlay {
             position: absolute;
             inset: 0;
@@ -97,15 +101,13 @@
             display: none; 
             opacity: 0;
             height: 100%;
-            width: 800%; /* 8 skjermer: 1 Logo, 6 Kategorier, 1 Grid */
+            width: 800%;
             transition: transform 1s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.5s ease;
             will-change: transform;
             z-index: 2;
         }
 
-        /* --- CONTAINER QUERIES --- */
         .frame {
-            /* 12.5% er nøyaktig 1/8 av 800%. Sørger for at hver slide er eksakt 100vw! */
             flex: 0 0 12.5%;
             width: 100%;
             height: 100%;
@@ -184,14 +186,35 @@
             position: absolute;
             inset: 0;
             background-color: transparent;
-            border: 0.3vw solid; 
-            border-image: var(--gold-grad) 1;
             display: flex;
             box-sizing: border-box;
-            transition: border-width 0.6s ease, opacity 0.5s ease;
+            transition: opacity 0.5s ease;
             width: 100%;
             height: 100%;
             overflow: hidden;
+        }
+
+        /* --- LEVENDE GULLRAMME --- */
+        .card-front::before, .card-back::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            padding: 0.3vw; 
+            background: var(--gold-grad);
+            background-size: 200% 200%;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            transition: padding 0.6s ease;
+            animation: goldTextureFlow 6s ease-in-out infinite;
+            z-index: 20; 
+        }
+
+        @keyframes goldTextureFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .card-front {
@@ -226,11 +249,13 @@
             object-fit: contain;
         }
 
+        /* --- SPM TEKST: FJERNET BOLD --- */
         .back-content {
             background: transparent;
             border: none;
             color: #fcf6ba;
-            font-family: 'Avenir', sans-serif;
+            font-family: 'Lexend Deca', Arial, Helvetica, sans-serif;
+            font-weight: 400 !important; /* TVINGER NORMAL VEKT */
             font-size: var(--q-font-size, 3.5cqw); 
             line-height: 1.35;
             padding: 4cqw; 
@@ -251,9 +276,9 @@
             box-shadow: 0 0 150px rgba(0,0,0,1);
         }
 
-        .category-card.expanded .card-front,
-        .category-card.expanded .card-back {
-            border-width: 0.8vw;
+        .category-card.expanded .card-front::before,
+        .category-card.expanded .card-back::before {
+            padding: 0.8vw; 
         }
 
         .category-card.is-closing {
@@ -271,10 +296,14 @@
             pointer-events: none;
         }
 
-        .category-card.used .card-front,
-        .category-card.used .card-back {
-            border-image: none;
-            border-color: #bf953f;
+        .category-card.used .card-front::before,
+        .category-card.used .card-back::before {
+            background: transparent;
+            border: 0.15vw solid rgba(191, 149, 63, 0.5);
+            -webkit-mask: none;
+            mask-composite: none;
+            padding: 0;
+            animation: none;
         }
         
         .category-card.used .card-label,
@@ -284,7 +313,6 @@
             visibility: hidden !important;
         }
 
-        /* --- UI FOR KNAPPER PÅ KORTENE --- */
         .flip-emblem {
             position: absolute;
             top: 0.8vw;
@@ -320,7 +348,6 @@
             margin-top: 0.1vw;
         }
 
-        /* --- FONT KONTROLL-KNAPP --- */
         .font-controls {
             position: absolute;
             bottom: 0.8vw;
@@ -384,39 +411,34 @@
             
             <div class="absolute bottom-0 left-0 w-full px-[3vw] pb-[2vw] flex justify-between items-end pointer-events-none z-[1000]">
                 
-                <!-- ORIGINAL, KOMPAKT AVVIKLINGS-PANEL -->
                 <div class="text-left text-white/80 font-inter text-[0.85vw] leading-[1.5] pointer-events-auto bg-black/60 p-[1vw] px-[1.5vw] rounded-xl border border-yellow-600/30 backdrop-blur-sm max-w-[65%]">
                     <h3 class="oswald text-[1.1vw] text-[#fcf6ba] mb-[0.5vw] tracking-wider uppercase font-bold">HVORDAN AVVIKLE:</h3>
                     <ul class="grid grid-cols-2 gap-x-[3vw] gap-y-[0.3vw] list-disc ml-[1.5vw] opacity-90">
                         <li><span class="text-[#bf953f] font-bold">▶ / ◀ :</span> Bla i introen</li>
                         <li><span class="text-[#bf953f] font-bold">1 - 6 :</span> Åpne / lukke kategori</li>
                         <li><span class="text-[#bf953f] font-bold">SPACE :</span> Vise / skjule spørsmål</li>
-                        <li><span class="text-[#bf953f] font-bold">ESC :</span> Lukk uten å krysse av</li>
                         <li><span class="text-[#bf953f] font-bold">Shift + 1-6:</span> Angre kryss på kategori</li>
+                        <li><span class="text-[#bf953f] font-bold">ESC :</span> Lukk uten å krysse av</li>
                         <li><span class="text-[#bf953f] font-bold">R :</span> Nullstill hele brettet</li>
                     </ul>
                 </div>
 
-                <!-- LAGRE OG KJØR KNAPP (Låst til høyre) -->
                 <div class="flex flex-col items-end gap-[1vw] pointer-events-auto">
                     <button onclick="startApp()" class="oswald px-[3vw] py-[1.2vw] bg-yellow-500 text-black font-black text-[1.4vw] rounded-xl hover:scale-105 transition-transform shadow-[0_0_30px_rgba(250,204,21,0.5)]">LAGRE OG KJØR</button>
                 </div>
             </div>
         </div>
 
-        <!-- Helt flat struktur for å unngå bredde-bugs! -->
         <div id="film-roll">
             <div class="frame" id="slide-logo">
                 <div style="width: 48vw; height: 31.375vw;" class="flex items-center justify-center relative">
-                     <img id="main-logo-img" src="https://lh3.googleusercontent.com/d/1CIjXV1qGCYWRi3R_y00ZIAsM---A4mX5" alt="Logo" style="max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 0 20px rgba(191,149,63,0.3));" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
+                     <img id="main-logo-img" src="logo.png" alt="Logo" style="max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 0 20px rgba(191,149,63,0.3));" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
                      
                      <span id="logo-fallback" class="oswald text-4xl gold-text text-center" style="display: none; border: 0.3vw dashed #bf953f; padding: 3vw; border-radius: 24px;">
-                        MANGLER BILDE<br><span id="logo-fallback-text" class="text-[1.5vw] text-white/50">Kunne ikke koble til Google Drive. Sjekk at maskinen har internett!</span>
+                        MANGLER BILDE<br><span id="logo-fallback-text" class="text-[1.5vw] text-white/50">Kunne ikke finne 'logo.png' i mappen!</span>
                      </span>
                 </div>
             </div>
-            
-            <!-- Slides 1-6 (Intro) injiseres automatisk her av JS rett før #grid-frame -->
             
             <div class="frame" id="grid-frame">
                 <div id="grid-view-inner">
@@ -428,61 +450,61 @@
     </div>
 
     <script>
-        // --- STANDARD INNHOLD MED OPPDATERT MANUS FOR MEDIADAGEN 2026 ---
+        // --- STANDARD INNHOLD: SPM 2 VASKET FOR "ELLER"-DELEN ---
         let categories = [
             { 
                 id: 1, 
                 text: "DEN VANSKELIGSTE\nJOBBEN I NORSK TV", 
-                qText: "- Hva har disse tre til felles?\n\n- Fellesforbundet er en del av LO. Hva heter LO-lederen i dag?\n\n- Hvem står bak denne fengende kjærlighetssangen?\n\n- Hva het det ukentlige debattprogrammet på TV2 som delte navn med en eldre norrøn duelltype?",
+                qText: "1. Hva har disse tre personene til felles?\n\n2. Hva heter LO-lederen i dag?\n\n3. Hvem står bak denne kjærlighetssangen?\n\n4. Hva het debattprogrammet som delte navn med en duelltype?",
                 showImage: false, imageSrc: "bilde1.png", 
                 imageStyle: "width: 60%; height: 60%; top: 50%; left: 50%; transform: translate(-50%, -50%);",
                 fontSize: "7cqw",
-                qFontSize: "2.5cqw"
+                qFontSize: "3cqw"
             },
             { 
                 id: 2, 
                 text: "ETTER 24 SESONGER\nSLITER JEG IKKE LENGER\nMED Å TRU AT NOKON\nKUNNE BU DER", 
-                qText: "- Hva heter duoen bak denne låta?\n\n- Hvilke to ord ble sagt på slutten av hver episode av Trygdekontoret?\n\n- Hva kalles det når kvinner opptar en ekstra sitteplass med vesken sin?\n\n- Hva heter briten som ble landskjent i siste sesong av \"Der ingen skulle tru at nokon kunne bu\"?\n\nELLER:\n- Hvem kjøpte i 2023 den dyreste boligen som noen gang er solgt i Norge?",
+                qText: "1. Hva heter duoen bak låta?\n\n2. Hvilke to ord ble alltid sagt på slutten av “Trygdekontoret”?\n\n3. Hva kalles det når kvinner opptar en ekstra sitteplass med vesken sin?\n\n4. Hva heter briten som ble landskjent for sin opptreden i “Der ingen skulle tru at nokon kunne bu”?",
                 showImage: false, imageSrc: "bilde2.png",
                 imageStyle: "width: 60%; height: 60%; top: 50%; left: 50%; transform: translate(-50%, -50%);",
-                fontSize: "7cqw",
-                qFontSize: "2.5cqw"
+                fontSize: "6cqw",
+                qFontSize: "3cqw"
             },
             { 
                 id: 3, 
                 text: "OPPA\nGANGFELT\nSTYLE", 
-                qText: "- Hvilket råd fikk Morten Abel av Kristoffer Hivju under leseprøvene til serien Mord i Sogn?\n\n- Hva heter denne artisten?\n\n- Nevn én som har vært redaktør for det feministiske magasinet Fett.\n\n- Hva heter det mest kjente kvartalet i New Orleans?",
+                qText: "1. Hvilket råd fikk Morten Abel av Kristoffer Hivju under leseprøvene til serien Mord i Sogn?\n\n2. Hvem var trekkplasteret til MAGAs eget Superbowl-pauseshow?\n\n3. Si én som har vært redaktør for tidsskriftet Fett.\n\n4. Hva heter det mest kjente kvartalet i New Orleans?",
                 showImage: false, imageSrc: "bilde3.png",
                 imageStyle: "width: 60%; height: 60%; top: 50%; left: 50%; transform: translate(-50%, -50%);",
                 fontSize: "8.5cqw",
-                qFontSize: "2.5cqw" 
+                qFontSize: "3cqw" 
             },
             { 
                 id: 4, 
                 text: "JA TIL FRED,\nMEN LITT KRIG ER GREIT,\nSÅ LENGE JEG FÅR SE\nMER TIL PALLE YDSTEBØ", 
-                qText: "- Forrige gang vi var i krig med Sverige tapte vi, og endte i union. Når var det?\n\n- Hvem slo ut Norge i 8.delsfinalen i fotball-VM 1998?\n\n- Hvor befinner du deg hvis du dorger?\n\n- Hvilket nummer assosierer vi med soldat August Stomperud?",
+                qText: "1. I hvilket år startet Norges union med Sverige?\n\n2. Hvilket land slo ut Norge i fotball-VM i 1998?\n\n3. Hvor befinner du deg hvis du dorger?\n\n4. Hvilket nummer assosierer vi med soldat August Stomperud?",
                 showImage: false, imageSrc: "bilde4.png",
                 imageStyle: "width: 60%; height: 60%; top: 50%; left: 50%; transform: translate(-50%, -50%);",
-                fontSize: "7cqw",
-                qFontSize: "2.5cqw" 
+                fontSize: "6cqw",
+                qFontSize: "3cqw" 
             },
             { 
                 id: 5, 
                 text: "", 
-                qText: "- Hadde Kåre Willoch hår på toppen av hodet da Jon Almaas ble født?\n\n- Missen Ángela Ponce representerte Spania i Miss Universe 2018. Hva gjorde henne spesiell?\n\n- Nissen i denne filmen spilles av David Harbour, som ble skilt fra hvem i 2025?\n\n- Spissen av Spania heter Gibraltar. Hvilket land ligger på den andre siden av Gibraltarstredet?",
+                qText: "1. Hadde Kåre Willoch hår på toppen av hodet da Jon Almaas ble født?\n\n2. Hva var spesielt med Àngela Ponces deltakelse i Miss Universe i 2018?\n\n3. Hvem ble David Harbour skilt fra i 2025?\n\n4. Hvilket land ligger på den andre siden av Gibraltarstredet?",
                 showImage: true, imageSrc: "1332_K6_Jon gigapenis.png",
                 imageStyle: "width: 103%; height: 103%; top: 50%; left: 50%; transform: translate(-50%, -50%);",
                 fontSize: "7cqw",
-                qFontSize: "2.5cqw" 
+                qFontSize: "3cqw" 
             },
             { 
                 id: 6, 
                 text: "DEN UBEHAGELIGE\n GJETTELEKEN SOM\nOPPSTÅR NÅR DU HAR\nVASKET HENDENE PÅ ET\nFREMMED BAD OG MÅ\nVELGE HVILKET HÅNDKLE\nDU SKAL BRUKE", 
-                qText: "- K.P. er initialene til artisten Kevin Parker. Under hvilket navn lager han musikk?\n\n- Hva kalles massen som brukes til å binde sammen mursteiner og oftest inneholder sement, vann og sand?\n\n- Steinar Klouman Hallert og Erlend Mørch lagde en animasjonsserie for NRK i 2024. Hva heter den?\n\n- Hva heter treningsøvelsen for kjernemuskulatur som Jon demonstrerer her?",
+                qText: "1. Under hvilket artistnavn lager Kevin Parker musikk?\n\n2. Hva kalles massen som brukes til å binde sammen mursteiner?\n\n3. Hva heter animasjonsserien til Steinar Klouman Hallert og Erlend Mørch?\n\n4. Hva heter treningsøvelsen Jon demonstrerte?",
                 showImage: false, imageSrc: "bilde6.png",
                 imageStyle: "width: 60%; height: 60%; top: 50%; left: 50%; transform: translate(-50%, -50%);",
-                fontSize: "5.8cqw",
-                qFontSize: "2.5cqw" 
+                fontSize: "5.5cqw",
+                qFontSize: "3cqw" 
             }
         ];
 
@@ -490,7 +512,7 @@
         let expandedId = null;
         let usedCategories = new Set();
 
-        const STORAGE_KEY = 'alleMotAlleData_v21'; // Oppdatert minne-nøkkel
+        const STORAGE_KEY = 'alleMotAlleData_FINAL_v26';
 
         const setupOverlay = document.getElementById('setup-overlay');
         const setupGrid = document.getElementById('setup-grid');
@@ -546,13 +568,10 @@
             categories.forEach(cat => {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'card-wrapper';
-
                 const card = document.createElement('div');
                 card.className = 'category-card';
-                
                 const inner = document.createElement('div');
                 inner.className = 'card-inner';
-
                 const front = document.createElement('div');
                 front.className = 'card-front';
                 
@@ -566,9 +585,7 @@
 
                 const label = document.createElement('span');
                 label.className = 'card-label gold-text editable oswald font-bold';
-                
                 label.style.setProperty('--font-size', cat.fontSize || '8.5cqw');
-                
                 label.contentEditable = "true";
                 label.spellcheck = false;
                 label.innerText = cat.text;
@@ -583,548 +600,181 @@
                 front.appendChild(label);
                 front.appendChild(createFlipEmblem(() => card.classList.toggle('flipped'), 'VISE SPM'));
 
-                // --- FONT STØRRELSE KONTROLLER (FORSIDE) ---
                 const fontControls = document.createElement('div');
                 fontControls.className = 'font-controls';
-                
                 let currentSize = parseFloat(cat.fontSize) || 8.5;
-                
-                const minusBtn = document.createElement('button');
-                minusBtn.innerText = '-';
-                const plusBtn = document.createElement('button');
-                plusBtn.innerText = '+';
-                const sizeDisplay = document.createElement('span');
-                sizeDisplay.innerText = currentSize.toFixed(1);
-                
-                minusBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    currentSize = Math.max(1, currentSize - 0.5);
-                    sizeDisplay.innerText = currentSize.toFixed(1);
-                    cat.fontSize = currentSize + 'cqw';
-                    label.style.setProperty('--font-size', cat.fontSize);
-                };
-                
-                plusBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    currentSize = Math.min(20, currentSize + 0.5);
-                    sizeDisplay.innerText = currentSize.toFixed(1);
-                    cat.fontSize = currentSize + 'cqw';
-                    label.style.setProperty('--font-size', cat.fontSize);
-                };
-
-                fontControls.appendChild(minusBtn);
-                fontControls.appendChild(sizeDisplay);
-                fontControls.appendChild(plusBtn);
+                const minusBtn = document.createElement('button'); minusBtn.innerText = '-';
+                const plusBtn = document.createElement('button'); plusBtn.innerText = '+';
+                const sizeDisplay = document.createElement('span'); sizeDisplay.innerText = currentSize.toFixed(1);
+                minusBtn.onclick = (e) => { e.stopPropagation(); currentSize = Math.max(1, currentSize - 0.5); sizeDisplay.innerText = currentSize.toFixed(1); cat.fontSize = currentSize + 'cqw'; label.style.setProperty('--font-size', cat.fontSize); };
+                plusBtn.onclick = (e) => { e.stopPropagation(); currentSize = Math.min(20, currentSize + 0.5); sizeDisplay.innerText = currentSize.toFixed(1); cat.fontSize = currentSize + 'cqw'; label.style.setProperty('--font-size', cat.fontSize); };
+                fontControls.appendChild(minusBtn); fontControls.appendChild(sizeDisplay); fontControls.appendChild(plusBtn);
                 front.appendChild(fontControls);
 
-                // --- BAKSIDE (SPØRSMÅL) ---
                 const back = document.createElement('div');
                 back.className = 'card-back';
-                
                 back.appendChild(createFlipEmblem(() => card.classList.toggle('flipped'), 'KATEGORI'));
-
                 const qArea = document.createElement('textarea');
                 qArea.className = 'back-content custom-scrollbar';
-                qArea.placeholder = "Fyll inn kategorispørsmål her...\n\nIngen overskrift, ingen bokser.\nBruk store og små bokstaver som du vil.";
+                qArea.placeholder = "Fyll inn kategorispørsmål her...";
                 qArea.value = cat.qText || ""; 
                 qArea.id = `setup-q-${cat.id}`;
-                
-                qArea.style.setProperty('--q-font-size', cat.qFontSize || '3.5cqw');
+                qArea.style.setProperty('--q-font-size', cat.qFontSize || '2.5cqw');
                 back.appendChild(qArea);
 
-                // --- FONT STØRRELSE KONTROLLER (BAKSIDE / SPØRSMÅL) ---
                 const qFontControls = document.createElement('div');
                 qFontControls.className = 'font-controls';
-                
-                let currentQSize = parseFloat(cat.qFontSize) || 3.5;
-                
-                const qMinusBtn = document.createElement('button');
-                qMinusBtn.innerText = '-';
-                const qPlusBtn = document.createElement('button');
-                qPlusBtn.innerText = '+';
-                const qSizeDisplay = document.createElement('span');
-                qSizeDisplay.innerText = currentQSize.toFixed(1);
-                
-                qMinusBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    currentQSize = Math.max(1, currentQSize - 0.5); 
-                    qSizeDisplay.innerText = currentQSize.toFixed(1);
-                    cat.qFontSize = currentQSize + 'cqw';
-                    qArea.style.setProperty('--q-font-size', cat.qFontSize);
-                };
-                
-                qPlusBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    currentQSize = Math.min(15, currentQSize + 0.5); 
-                    qSizeDisplay.innerText = currentQSize.toFixed(1);
-                    cat.qFontSize = currentQSize + 'cqw';
-                    qArea.style.setProperty('--q-font-size', cat.qFontSize);
-                };
-
-                qFontControls.appendChild(qMinusBtn);
-                qFontControls.appendChild(qSizeDisplay);
-                qFontControls.appendChild(qPlusBtn);
+                let currentQSize = parseFloat(cat.qFontSize) || 2.5;
+                const qMinusBtn = document.createElement('button'); qMinusBtn.innerText = '-';
+                const qPlusBtn = document.createElement('button'); qPlusBtn.innerText = '+';
+                const qSizeDisplay = document.createElement('span'); qSizeDisplay.innerText = currentQSize.toFixed(1);
+                qMinusBtn.onclick = (e) => { e.stopPropagation(); currentQSize = Math.max(1, currentQSize - 0.5); qSizeDisplay.innerText = currentQSize.toFixed(1); cat.qFontSize = currentQSize + 'cqw'; qArea.style.setProperty('--q-font-size', cat.qFontSize); };
+                qPlusBtn.onclick = (e) => { e.stopPropagation(); currentQSize = Math.min(15, currentQSize + 0.5); qSizeDisplay.innerText = currentQSize.toFixed(1); cat.qFontSize = currentQSize + 'cqw'; qArea.style.setProperty('--q-font-size', cat.qFontSize); };
+                qFontControls.appendChild(qMinusBtn); qFontControls.appendChild(qSizeDisplay); qFontControls.appendChild(qPlusBtn);
                 back.appendChild(qFontControls);
 
-                inner.appendChild(front);
-                inner.appendChild(back);
-                card.appendChild(inner);
-                wrapper.appendChild(card);
-                setupGrid.appendChild(wrapper);
+                inner.appendChild(front); inner.appendChild(back); card.appendChild(inner); wrapper.appendChild(card); setupGrid.appendChild(wrapper);
             });
-
             initParticles();
         }
 
         function startApp() {
-            // --- LYD-HACK FOR NETTLESERE ---
             const audio = document.getElementById('pling-audio');
-            if (audio) {
-                audio.muted = true;
-                let playPromise = audio.play();
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        audio.pause();
-                        audio.currentTime = 0;
-                        audio.muted = false;
-                    }).catch(e => console.log("Lyd-hack feilet: ", e));
-                }
-            }
-
+            if (audio) { audio.muted = true; let playPromise = audio.play(); if (playPromise !== undefined) { playPromise.then(() => { audio.pause(); audio.currentTime = 0; audio.muted = false; }).catch(e => console.log("Lyd-hack feilet: ", e)); } }
             categories = categories.map(cat => {
                 const el = document.getElementById(`setup-input-${cat.id}`);
                 const qText = document.getElementById(`setup-q-${cat.id}`).value;
                 const originalCat = categories.find(c => c.id === cat.id);
-                
-                return {
-                    id: cat.id,
-                    text: el.innerText.trim().toUpperCase(),
-                    qText: qText,
-                    showImage: originalCat.showImage, 
-                    imageSrc: originalCat.imageSrc,
-                    imageStyle: originalCat.imageStyle,
-                    fontSize: originalCat.fontSize,
-                    qFontSize: originalCat.qFontSize
-                };
+                return { id: cat.id, text: el.innerText.trim().toUpperCase(), qText: qText, showImage: originalCat.showImage, imageSrc: originalCat.imageSrc, imageStyle: originalCat.imageStyle, fontSize: originalCat.fontSize, qFontSize: originalCat.qFontSize };
             });
-
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                categories: categories
-            }));
-
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ categories: categories }));
             buildGame();
-
             setupOverlay.style.opacity = '0';
-            setTimeout(() => {
-                setupOverlay.style.display = 'none';
-                roll.style.display = 'flex';
-                roll.offsetHeight; 
-                roll.style.opacity = '1';
-            }, 500);
+            setTimeout(() => { setupOverlay.style.display = 'none'; roll.style.display = 'flex'; roll.offsetHeight; roll.style.opacity = '1'; }, 500);
         }
 
         function buildGame() {
             document.querySelectorAll('.intro-slide').forEach(el => el.remove());
             gridContainer.innerHTML = '';
-
             categories.forEach(cat => {
-                // -------------------------------------------
-                // 1. INTRO-SKJERMEN (ÅPNINGEN)
-                // -------------------------------------------
                 const slideDiv = document.createElement('div');
                 slideDiv.className = 'frame intro-slide';
-                
-                if (cat.showImage && cat.imageSrc) {
-                    const img = document.createElement('img');
-                    img.src = cat.imageSrc;
-                    img.className = 'card-image';
-                    img.style.cssText = cat.imageStyle; 
-                    slideDiv.appendChild(img);
-                }
-
+                if (cat.showImage && cat.imageSrc) { const img = document.createElement('img'); img.src = cat.imageSrc; img.className = 'card-image'; img.style.cssText = cat.imageStyle; slideDiv.appendChild(img); }
                 const slideSpan = document.createElement('span');
                 slideSpan.className = 'big-text oswald font-black gold-text';
                 slideSpan.style.setProperty('--font-size', cat.fontSize || '8.5cqw');
                 slideSpan.innerText = cat.text;
                 slideDiv.appendChild(slideSpan);
-                
                 roll.insertBefore(slideDiv, frame);
 
-                // -------------------------------------------
-                // 2. SPILL-KORTENE (GRID & EXPANDED)
-                // -------------------------------------------
                 const wrapper = document.createElement('div');
                 wrapper.className = 'card-wrapper';
-
                 const card = document.createElement('div');
                 card.className = 'category-card';
                 card.id = `card-${cat.id}`;
-                
                 const inner = document.createElement('div');
                 inner.className = 'card-inner';
-
                 const front = document.createElement('div');
                 front.className = 'card-front cursor-pointer';
-                front.onclick = () => {
-                    if (!card.classList.contains('flipped')) toggleExpand(cat.id, true);
-                };
-                
-                if (cat.showImage && cat.imageSrc) {
-                    const img = document.createElement('img');
-                    img.src = cat.imageSrc;
-                    img.className = 'card-image';
-                    img.style.cssText = cat.imageStyle; 
-                    front.appendChild(img);
-                }
-
+                front.onclick = () => { if (!card.classList.contains('flipped')) toggleExpand(cat.id, true); };
+                if (cat.showImage && cat.imageSrc) { const img = document.createElement('img'); img.src = cat.imageSrc; img.className = 'card-image'; img.style.cssText = cat.imageStyle; front.appendChild(img); }
                 const label = document.createElement('span');
                 label.className = 'card-label gold-text oswald font-bold pointer-events-none';
                 label.style.setProperty('--font-size', cat.fontSize || '8.5cqw');
                 label.innerText = cat.text;
                 front.appendChild(label);
-
                 const back = document.createElement('div');
                 back.className = 'card-back';
-                
                 const qTextDisplay = document.createElement('div');
                 qTextDisplay.className = 'back-content custom-scrollbar overflow-y-auto';
                 qTextDisplay.innerText = cat.qText || '';
-                qTextDisplay.style.setProperty('--q-font-size', cat.qFontSize || '3.5cqw');
+                qTextDisplay.style.setProperty('--q-font-size', cat.qFontSize || '2.5cqw');
                 back.appendChild(qTextDisplay);
-
-                inner.appendChild(front);
-                inner.appendChild(back);
-                card.appendChild(inner);
-                wrapper.appendChild(card);
-                gridContainer.appendChild(wrapper);
+                inner.appendChild(front); inner.appendChild(back); card.appendChild(inner); wrapper.appendChild(card); gridContainer.appendChild(wrapper);
             });
         }
 
-        function updateSlide() {
-            roll.style.transform = `translateX(-${currentSlide * 12.5}%)`;
-        }
+        function updateSlide() { roll.style.transform = `translateX(-${currentSlide * 12.5}%)`; }
 
         function morphCat6ToGrid() {
             const card6 = document.getElementById('card-6');
             const label6 = card6 ? card6.querySelector('.card-label') : null;
             if(!card6 || !label6) return;
-            
             roll.style.transition = 'none';
             currentSlide = 7;
-            
-            for(let i=1; i<=6; i++) {
-                const c = document.getElementById(`card-${i}`);
-                if(c) {
-                    c.style.transition = 'none';
-                    c.style.opacity = '0';
-                }
-            }
-
-            label6.style.transition = 'none';
-            label6.style.opacity = '0';
-            
+            for(let i=1; i<=6; i++) { const c = document.getElementById(`card-${i}`); if(c) { c.style.transition = 'none'; c.style.opacity = '0'; } }
+            label6.style.transition = 'none'; label6.style.opacity = '0';
             const img6 = card6.querySelector('.card-image');
-            if(img6) {
-                img6.style.transition = 'none';
-                img6.style.opacity = '0';
-            }
-
+            if(img6) { img6.style.transition = 'none'; img6.style.opacity = '0'; }
             updateSlide(); 
-            
             const ghost = document.createElement('div');
-            ghost.className = 'frame'; 
-            ghost.style.position = 'absolute';
-            ghost.style.zIndex = '9999';
-            ghost.style.top = '0';
-            ghost.style.left = '0';
-            // HER ER FIKSEN FOR SNAP-BUGEN: Den må være eksakt 100% av viewport for å treffe senter perfekt!
-            ghost.style.width = '100%';
-            ghost.style.height = '100%';
-            ghost.style.margin = '0';
-            ghost.style.containerType = 'inline-size'; 
-
+            ghost.className = 'frame'; ghost.style.position = 'absolute'; ghost.style.zIndex = '9999'; ghost.style.top = '0'; ghost.style.left = '0'; ghost.style.width = '100%'; ghost.style.height = '100%'; ghost.style.margin = '0'; ghost.style.containerType = 'inline-size'; 
             const cat6Data = categories[5];
-
-            if (cat6Data.showImage && cat6Data.imageSrc) {
-                const ghostImg = document.createElement('img');
-                ghostImg.src = cat6Data.imageSrc;
-                ghostImg.className = 'card-image';
-                ghostImg.style.cssText = cat6Data.imageStyle; 
-                ghost.appendChild(ghostImg);
-            }
-
+            if (cat6Data.showImage && cat6Data.imageSrc) { const ghostImg = document.createElement('img'); ghostImg.src = cat6Data.imageSrc; ghostImg.className = 'card-image'; ghostImg.style.cssText = cat6Data.imageStyle; ghost.appendChild(ghostImg); }
             const ghostText = document.createElement('span');
             ghostText.className = 'big-text oswald font-bold gold-text';
             ghostText.style.setProperty('--font-size', cat6Data.fontSize || '8.5cqw');
-            ghostText.innerText = cat6Data.text;
-            ghost.appendChild(ghostText);
-
-            const viewport = document.getElementById('app-viewport');
-            viewport.appendChild(ghost);
-            
-            viewport.offsetHeight;
-
-            const targetRect = card6.getBoundingClientRect(); // Låser nøyaktig mot hele kortets omkrets
-            const viewportRect = viewport.getBoundingClientRect();
-
+            ghostText.innerText = cat6Data.text; ghost.appendChild(ghostText);
+            const viewport = document.getElementById('app-viewport'); viewport.appendChild(ghost); viewport.offsetHeight;
+            const targetRect = card6.getBoundingClientRect(); const viewportRect = viewport.getBoundingClientRect();
             const targetCenterX = (targetRect.left + targetRect.width / 2) - viewportRect.left;
             const targetCenterY = (targetRect.top + targetRect.height / 2) - viewportRect.top;
-
-            const startCenterX = viewportRect.width / 2;
-            const startCenterY = viewportRect.height / 2;
-
-            const deltaX = targetCenterX - startCenterX;
-            const deltaY = targetCenterY - startCenterY;
-
+            const startCenterX = viewportRect.width / 2; const startCenterY = viewportRect.height / 2;
+            const deltaX = targetCenterX - startCenterX; const deltaY = targetCenterY - startCenterY;
             const scale = targetRect.width / viewportRect.width;
-
             ghost.style.transition = 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
             ghost.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${scale})`;
-
-            setTimeout(() => {
-                for(let i=1; i<=6; i++) {
-                    const c = document.getElementById(`card-${i}`);
-                    if(c) {
-                        c.style.transition = 'opacity 0.6s ease';
-                        c.style.opacity = '1';
-                    }
-                }
-            }, 100); 
-
-            setTimeout(() => {
-                label6.style.opacity = '';
-                if(img6) img6.style.opacity = '';
-                
-                ghost.remove();
-
-                setTimeout(() => {
-                    label6.style.transition = ''; 
-                    if(img6) img6.style.transition = '';
-                }, 50);
-                
-                for(let i=1; i<=6; i++) {
-                    const c = document.getElementById(`card-${i}`);
-                    if(c) {
-                        c.style.transition = '';
-                        c.style.opacity = '';
-                    }
-                }
-                
-                gridContainer.classList.add('grid-wow-glow');
-                setTimeout(() => {
-                    gridContainer.classList.remove('grid-wow-glow');
-                }, 2000); 
-
-                roll.style.transition = 'transform 1s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.5s ease';
-            }, 800);
+            setTimeout(() => { for(let i=1; i<=6; i++) { const c = document.getElementById(`card-${i}`); if(c) { c.style.transition = 'opacity 0.6s ease'; c.style.opacity = '1'; } } }, 100); 
+            setTimeout(() => { label6.style.opacity = ''; if(img6) img6.style.opacity = ''; ghost.remove(); for(let i=1; i<=6; i++) { const c = document.getElementById(`card-${i}`); if(c) { c.style.transition = ''; c.style.opacity = ''; } } gridContainer.classList.add('grid-wow-glow'); setTimeout(() => gridContainer.classList.remove('grid-wow-glow'), 2000); roll.style.transition = 'transform 1s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.5s ease'; }, 800);
         }
 
         function toggleExpand(id, markAsUsed = true) {
             if (currentSlide !== 7) return;
             const card = document.getElementById(`card-${id}`);
             const frameRect = frame.getBoundingClientRect();
-            
             if (expandedId === id) {
-                // --- LUKK ---
-                expandedId = null;
-                const rect = JSON.parse(card.getAttribute('data-origin'));
-                
-                const cardRect = card.getBoundingClientRect();
-                card.style.transition = 'none'; 
-                card.style.top = (cardRect.top - frameRect.top) + 'px';
-                card.style.left = (cardRect.left - frameRect.left) + 'px';
-                card.style.width = cardRect.width + 'px';
-                card.style.height = cardRect.height + 'px';
-                
-                card.offsetHeight; 
-                card.style.transition = ''; 
-                
-                gridContainer.classList.remove('grid-dimmed');
-                card.classList.remove('expanded');
-                card.classList.add('is-closing');
-                
-                card.style.top = rect.top + 'px';
-                card.style.left = rect.left + 'px';
-                card.style.width = rect.width + 'px';
-                card.style.height = rect.height + 'px';
-                
-                setTimeout(() => {
-                    if (expandedId === null) {
-                        card.style.transition = 'none';
-                        card.style.position = 'relative';
-                        card.style.top = 'auto'; 
-                        card.style.left = 'auto';
-                        card.style.width = '100%'; 
-                        card.style.height = '100%'; 
-                        card.classList.remove('is-closing');
-                        
-                        card.classList.remove('flipped');
-                        
-                        card.offsetHeight; 
-                        card.style.transition = ''; 
-                        
-                        if (markAsUsed) {
-                            usedCategories.add(id);
-                            card.classList.add('used');
-                        }
-                    }
-                }, 600);
+                expandedId = null; const rect = JSON.parse(card.getAttribute('data-origin')); const cardRect = card.getBoundingClientRect();
+                card.style.transition = 'none'; card.style.top = (cardRect.top - frameRect.top) + 'px'; card.style.left = (cardRect.left - frameRect.left) + 'px'; card.style.width = cardRect.width + 'px'; card.style.height = cardRect.height + 'px'; card.offsetHeight; card.style.transition = ''; 
+                gridContainer.classList.remove('grid-dimmed'); card.classList.remove('expanded'); card.classList.add('is-closing');
+                card.style.top = rect.top + 'px'; card.style.left = rect.left + 'px'; card.style.width = rect.width + 'px'; card.style.height = rect.height + 'px';
+                setTimeout(() => { if (expandedId === null) { card.style.transition = 'none'; card.style.position = 'relative'; card.style.top = 'auto'; card.style.left = 'auto'; card.style.width = '100%'; card.style.height = '100%'; card.classList.remove('is-closing'); card.classList.remove('flipped'); card.offsetHeight; card.style.transition = ''; if (markAsUsed) { usedCategories.add(id); card.classList.add('used'); } } }, 600);
             } else if (expandedId === null) {
-                // --- ÅPNE ---
                 if (usedCategories.has(id)) return;
-                
-                expandedId = id;
-                const cardRect = card.getBoundingClientRect();
-
-                const origin = {
-                    top: cardRect.top - frameRect.top,
-                    left: cardRect.left - frameRect.left,
-                    width: cardRect.width,
-                    height: cardRect.height
-                };
-                
+                expandedId = id; const cardRect = card.getBoundingClientRect();
+                const origin = { top: cardRect.top - frameRect.top, left: cardRect.left - frameRect.left, width: cardRect.width, height: cardRect.height };
                 card.setAttribute('data-origin', JSON.stringify(origin));
-                
-                card.style.transition = 'none';
-                card.style.position = 'absolute';
-                card.style.top = origin.top + 'px';
-                card.style.left = origin.left + 'px';
-                card.style.width = origin.width + 'px';
-                card.style.height = origin.height + 'px';
-                card.style.zIndex = '100';
-                
-                card.offsetHeight; 
-                card.style.transition = '';
-                
-                gridContainer.classList.add('grid-dimmed');
-                card.classList.add('expanded');
-
-                card.style.top = '0px';
-                card.style.left = '0px';
-                card.style.width = frameRect.width + 'px';
-                card.style.height = frameRect.height + 'px';
-
-                setTimeout(() => {
-                    if (expandedId === id) {
-                        card.style.transition = 'none';
-                        card.style.width = '100%';
-                        card.style.height = '100%';
-                        card.offsetHeight;
-                        card.style.transition = '';
-                        
-                        playPling();
-                        card.classList.add('flash-trigger');
-                        
-                        setTimeout(() => card.classList.remove('flash-trigger'), 50);
-                    }
-                }, 600);
+                card.style.transition = 'none'; card.style.position = 'absolute'; card.style.top = origin.top + 'px'; card.style.left = origin.left + 'px'; card.style.width = origin.width + 'px'; card.style.height = origin.height + 'px'; card.style.zIndex = '100'; card.offsetHeight; card.style.transition = ''; 
+                gridContainer.classList.add('grid-dimmed'); card.classList.add('expanded');
+                card.style.top = '0px'; card.style.left = '0px'; card.style.width = frameRect.width + 'px'; card.style.height = frameRect.height + 'px';
+                setTimeout(() => { if (expandedId === id) { card.style.transition = 'none'; card.style.width = '100%'; card.style.height = '100%'; card.offsetHeight; card.style.transition = ''; playPling(); } }, 600);
             }
         }
 
         function initParticles() {
-            const canvas = document.getElementById('particles-canvas');
-            const ctx = canvas.getContext('2d');
-            let particles = [];
-            
-            function resize() {
-                const viewport = document.getElementById('app-viewport');
-                canvas.width = viewport.clientWidth || window.innerWidth;
-                canvas.height = viewport.clientHeight || window.innerHeight;
-            }
-            window.addEventListener('resize', resize);
-            resize();
-
+            const canvas = document.getElementById('particles-canvas'); const ctx = canvas.getContext('2d'); let particles = [];
+            function resize() { const viewport = document.getElementById('app-viewport'); canvas.width = viewport.clientWidth || window.innerWidth; canvas.height = viewport.clientHeight || window.innerHeight; }
+            window.addEventListener('resize', resize); resize();
             const goldColors = ['rgba(191, 149, 63, 0.7)', 'rgba(252, 246, 186, 0.6)', 'rgba(179, 135, 40, 0.8)', 'rgba(250, 204, 21, 0.6)'];
-
-            for(let i=0; i<100; i++) {
-                particles.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    s: Math.random() * 2 + 0.5,
-                    v: Math.random() * 0.1 + 0.02, 
-                    a: Math.random() * Math.PI * 2,
-                    c: goldColors[Math.floor(Math.random() * goldColors.length)]
-                });
-            }
-
-            function animate() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particles.forEach(p => {
-                    ctx.fillStyle = p.c;
-                    p.y -= p.v;
-                    p.x += Math.sin(p.a) * 0.1;
-                    
-                    if(p.y < -10) p.y = canvas.height + 10;
-                    if(p.x < -10) p.x = canvas.width + 10;
-                    if(p.x > canvas.width + 10) p.x = -10;
-                    
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.s, 0, Math.PI*2);
-                    ctx.fill();
-                });
-                requestAnimationFrame(animate);
-            }
+            for(let i=0; i<100; i++) { particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, s: Math.random() * 2 + 0.5, v: Math.random() * 0.1 + 0.02, a: Math.random() * Math.PI * 2, c: goldColors[Math.floor(Math.random() * goldColors.length)] }); }
+            function animate() { ctx.clearRect(0, 0, canvas.width, canvas.height); particles.forEach(p => { ctx.fillStyle = p.c; p.y -= p.v; p.x += Math.sin(p.a) * 0.1; if(p.y < -10) p.y = canvas.height + 10; if(p.x < -10) p.x = canvas.width + 10; if(p.x > canvas.width + 10) p.x = -10; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill(); }); requestAnimationFrame(animate); }
             animate();
         }
 
         window.addEventListener('keydown', (e) => {
-            const ae = document.activeElement;
-            if (ae && (ae.isContentEditable || ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')) {
-                if (e.key === 'Escape') ae.blur();
-                return;
-            }
-
-            if (e.code === 'Space' && expandedId !== null) {
-                e.preventDefault(); 
-                document.getElementById(`card-${expandedId}`).classList.toggle('flipped');
-                return;
-            }
-            
+            const ae = document.activeElement; if (ae && (ae.isContentEditable || ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')) { if (e.key === 'Escape') ae.blur(); return; }
+            if (e.code === 'Space' && expandedId !== null) { e.preventDefault(); document.getElementById(`card-${expandedId}`).classList.toggle('flipped'); return; }
             if (expandedId === null) {
-                if (e.key === 'ArrowRight' && currentSlide < 7) { 
-                    if (currentSlide === 6) {
-                        morphCat6ToGrid();
-                    } else {
-                        currentSlide++; 
-                        updateSlide(); 
-                        playPling();
-                    }
-                }
-                if (e.key === 'ArrowLeft' && currentSlide > 0) { 
-                    currentSlide--; 
-                    updateSlide(); 
-                    playPling();
-                }
+                if (e.key === 'ArrowRight' && currentSlide < 7) { if (currentSlide === 6) { morphCat6ToGrid(); } else { currentSlide++; updateSlide(); playPling(); } }
+                if (e.key === 'ArrowLeft' && currentSlide > 0) { currentSlide--; updateSlide(); playPling(); }
             }
-
             const digitMatch = e.code.match(/^(Digit|Numpad)([1-6])$/);
-
             if (digitMatch) {
                 const id = parseInt(digitMatch[2]);
-                
-                if (e.shiftKey && expandedId === null) {
-                    if (usedCategories.has(id)) {
-                        usedCategories.delete(id);
-                        document.getElementById(`card-${id}`).classList.remove('used');
-                    }
-                } else if (!e.shiftKey) {
-                    if (currentSlide === 7) toggleExpand(id, true);
-                    else { 
-                        currentSlide = 7; 
-                        updateSlide(); 
-                        setTimeout(() => toggleExpand(id, true), 1050); 
-                    }
-                }
+                if (e.shiftKey && expandedId === null) { if (usedCategories.has(id)) { usedCategories.delete(id); document.getElementById(`card-${id}`).classList.remove('used'); } }
+                else if (!e.shiftKey) { if (currentSlide === 7) toggleExpand(id, true); else { currentSlide = 7; updateSlide(); setTimeout(() => toggleExpand(id, true), 1050); } }
             }
-            
-            if ((e.key === 'Escape' || e.key === 'Backspace') && expandedId !== null) {
-                toggleExpand(expandedId, false);
-            }
-
-            if (e.code === 'KeyR' && expandedId === null) {
-                usedCategories.clear();
-                document.querySelectorAll('.category-card.used').forEach(c => c.classList.remove('used'));
-            }
+            if ((e.key === 'Escape' || e.key === 'Backspace') && expandedId !== null) { toggleExpand(expandedId, false); }
+            if (e.code === 'KeyR' && expandedId === null) { usedCategories.clear(); document.querySelectorAll('.category-card.used').forEach(c => c.classList.remove('used')); }
         });
 
         initSetup();
