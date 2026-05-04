@@ -24,7 +24,8 @@
 
         :root {
             --gold-grad: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
-            --dark-blue-base: #050a18;
+            --dark-blue-base: #020834;
+            --blue-glow: #0c1846;
         }
 
         body {
@@ -48,7 +49,7 @@
             height: 56.25vw;
             max-height: 100vh;
             max-width: 177.78vh;
-            background: radial-gradient(circle at center, #0a1631 0%, var(--dark-blue-base) 100%);
+            background: radial-gradient(circle at center, var(--blue-glow) 0%, #072a59 45%, var(--dark-blue-base) 100%);
             background-size: 200% 200%;
             animation: bgMove 25s ease infinite;
             overflow: hidden;
@@ -66,6 +67,31 @@
             top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none;
             z-index: 1;
+        }
+
+        #logo-particles-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+
+        #logo-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 900;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, var(--blue-glow) 0%, #072a59 45%, var(--dark-blue-base) 100%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        #logo-overlay.visible {
+            opacity: 1;
         }
 
         .gold-text {
@@ -404,6 +430,16 @@
 
     <div id="app-viewport">
         <canvas id="particles-canvas"></canvas>
+
+        <div id="logo-overlay">
+            <canvas id="logo-particles-canvas"></canvas>
+            <div style="width: 48vw; height: 31.375vw; z-index: 2;" class="flex items-center justify-center relative">
+                <img id="logo-overlay-img" src="logo.png" alt="Logo" style="max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 0 20px rgba(191,149,63,0.3));" onerror="this.style.display='none'; document.getElementById('logo-overlay-fallback').style.display='block';">
+                <span id="logo-overlay-fallback" class="oswald text-4xl gold-text text-center" style="display: none; border: 0.3vw dashed #bf953f; padding: 3vw; border-radius: 24px;">
+                    MANGLER BILDE<br><span class="text-[1.5vw] text-white/50">Kunne ikke finne 'logo.png' i mappen!</span>
+                </span>
+            </div>
+        </div>
         
         <div id="setup-overlay">
             <h2 class="oswald text-[2.8vw] gold-text mb-[1.5vw]">OPPSETT AV SKJERMER</h2>
@@ -420,6 +456,7 @@
                         <li><span class="text-[#bf953f] font-bold">Shift + 1-6:</span> Reset en kategori</li>
                         <li><span class="text-[#bf953f] font-bold">ESC :</span> Angre åpning av nylig valgt kategori</li>
                         <li><span class="text-[#bf953f] font-bold">R :</span> Reset alle kategorier </li>
+                        <li><span class="text-[#bf953f] font-bold">L :</span> Vis / skjul logo</li>
                     </ul>
                 </div>
 
@@ -512,13 +549,15 @@
         let expandedId = null;
         let usedCategories = new Set();
 
-        const STORAGE_KEY = 'alleMotAlleData_FINAL_v28';
+        const STORAGE_KEY = 'alleMotAlleData_FINAL_v29';
 
         const setupOverlay = document.getElementById('setup-overlay');
         const setupGrid = document.getElementById('setup-grid');
         const roll = document.getElementById('film-roll');
         const gridContainer = document.getElementById('grid-container');
         const frame = document.getElementById('grid-frame');
+        const logoOverlay = document.getElementById('logo-overlay');
+        let logoOverlayVisible = false;
 
         const flipIconSVG = '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8m0 0V3m0 5h5"></path></svg>';
 
@@ -528,6 +567,11 @@
                 audio.currentTime = 0;
                 audio.play().catch(e => console.log('Krever klikk på skjermen for å spille lyd.', e));
             }
+        }
+
+        function toggleLogoOverlay() {
+            logoOverlayVisible = !logoOverlayVisible;
+            logoOverlay.classList.toggle('visible', logoOverlayVisible);
         }
 
         function createFlipEmblem(onClick, btnText) {
@@ -751,17 +795,22 @@
         }
 
         function initParticles() {
-            const canvas = document.getElementById('particles-canvas'); const ctx = canvas.getContext('2d'); let particles = [];
-            function resize() { const viewport = document.getElementById('app-viewport'); canvas.width = viewport.clientWidth || window.innerWidth; canvas.height = viewport.clientHeight || window.innerHeight; }
-            window.addEventListener('resize', resize); resize();
-            const goldColors = ['rgba(191, 149, 63, 0.7)', 'rgba(252, 246, 186, 0.6)', 'rgba(179, 135, 40, 0.8)', 'rgba(250, 204, 21, 0.6)'];
-            for(let i=0; i<100; i++) { particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, s: Math.random() * 2 + 0.5, v: Math.random() * 0.1 + 0.02, a: Math.random() * Math.PI * 2, c: goldColors[Math.floor(Math.random() * goldColors.length)] }); }
-            function animate() { ctx.clearRect(0, 0, canvas.width, canvas.height); particles.forEach(p => { ctx.fillStyle = p.c; p.y -= p.v; p.x += Math.sin(p.a) * 0.1; if(p.y < -10) p.y = canvas.height + 10; if(p.x < -10) p.x = canvas.width + 10; if(p.x > canvas.width + 10) p.x = -10; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill(); }); requestAnimationFrame(animate); }
-            animate();
+            function setupParticleCanvas(canvasId, particleCount) {
+                const canvas = document.getElementById(canvasId); const ctx = canvas.getContext('2d'); let particles = [];
+                function resize() { const viewport = document.getElementById('app-viewport'); canvas.width = viewport.clientWidth || window.innerWidth; canvas.height = viewport.clientHeight || window.innerHeight; }
+                window.addEventListener('resize', resize); resize();
+                const goldColors = ['rgba(191, 149, 63, 0.7)', 'rgba(252, 246, 186, 0.6)', 'rgba(179, 135, 40, 0.8)', 'rgba(250, 204, 21, 0.6)'];
+                for(let i=0; i<particleCount; i++) { particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, s: Math.random() * 2 + 0.5, v: Math.random() * 0.1 + 0.02, a: Math.random() * Math.PI * 2, c: goldColors[Math.floor(Math.random() * goldColors.length)] }); }
+                function animate() { ctx.clearRect(0, 0, canvas.width, canvas.height); particles.forEach(p => { ctx.fillStyle = p.c; p.y -= p.v; p.x += Math.sin(p.a) * 0.1; if(p.y < -10) p.y = canvas.height + 10; if(p.x < -10) p.x = canvas.width + 10; if(p.x > canvas.width + 10) p.x = -10; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill(); }); requestAnimationFrame(animate); }
+                animate();
+            }
+            setupParticleCanvas('particles-canvas', 100);
+            setupParticleCanvas('logo-particles-canvas', 100);
         }
 
         window.addEventListener('keydown', (e) => {
             const ae = document.activeElement; if (ae && (ae.isContentEditable || ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')) { if (e.key === 'Escape') ae.blur(); return; }
+            if (e.code === 'KeyL') { e.preventDefault(); toggleLogoOverlay(); return; }
             if (e.code === 'Space' && expandedId !== null) { e.preventDefault(); document.getElementById(`card-${expandedId}`).classList.toggle('flipped'); return; }
             if (expandedId === null) {
                 if (e.key === 'ArrowRight' && currentSlide < 7) { if (currentSlide === 6) { morphCat6ToGrid(); } else { currentSlide++; updateSlide(); playPling(); } }
